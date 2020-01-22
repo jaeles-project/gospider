@@ -15,6 +15,9 @@ go get -u github.com/theblackturtle/gospider
 * Find Subdomain from response source
 * Get URLs from Wayback Machine, Common Crawl, Virus Total
 * Format output easy to Grep
+* Support Burp input
+* Crawl multiple sites in parallel
+* Random mobile/web User-Agent
 
 ## Usage
 ```
