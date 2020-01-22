@@ -7,19 +7,17 @@ import (
 	"github.com/gocolly/colly"
 	"github.com/gocolly/colly/extensions"
 	"github.com/spf13/cobra"
-	"github.com/theblackturtle/webcrawler/stringset"
+	"github.com/theblackturtle/gospider/stringset"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"regexp"
 	"strings"
-	"sync"
 	"time"
 )
 
 type Crawler struct {
-	mutex    sync.Mutex
 	cmd      *cobra.Command
 	C        *colly.Collector
 	Output   *Output

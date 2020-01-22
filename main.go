@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/theblackturtle/webcrawler/core"
+	"github.com/theblackturtle/gospider/core"
 	"net/url"
 
 	"os"
