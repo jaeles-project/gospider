@@ -1,0 +1,5 @@
+.DS_Store
+webcrawler
+out*/
+.idea/
+*.txt
