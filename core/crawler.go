@@ -63,7 +63,6 @@ func NewCrawler(site string, cmd *cobra.Command) *Crawler {
 	c.WithTransport(tr)
 
 	// Get headers here to overwrite if "burp" flag used
-
 	burpFile, _ := cmd.Flags().GetString("burp")
 	if burpFile != "" {
 		bF, err := os.Open(burpFile)
@@ -215,7 +214,7 @@ func (crawler *Crawler) Start() {
 
 	// Handle js files
 	jsFileSet := stringset.NewStringFilter()
-	crawler.C.OnHTML("script[src]", func(e *colly.HTMLElement) {
+	crawler.C.OnHTML("[src]", func(e *colly.HTMLElement) {
 		jsFileUrl := e.Request.AbsoluteURL(e.Attr("src"))
 		jsFileUrl = FixUrl(jsFileUrl, crawler.site)
 		if jsFileUrl == "" {
@@ -223,12 +222,10 @@ func (crawler *Crawler) Start() {
 		}
 		if !jsFileSet.Duplicate(jsFileUrl) {
 			// Use regex to parse javascript file have main domain
-			if crawler.domainRe.MatchString(jsFileUrl) {
-				outputFormat := fmt.Sprintf("[javascript] - %s", jsFileUrl)
-				Logger.Info(outputFormat + "\n")
-				if crawler.Output != nil {
-					crawler.Output.WriteToFile(outputFormat)
-				}
+			outputFormat := fmt.Sprintf("[javascript] - %s", jsFileUrl)
+			Logger.Info(outputFormat + "\n")
+			if crawler.Output != nil {
+				crawler.Output.WriteToFile(outputFormat)
 			}
 			// Request and Get JS link
 			crawler.linkFinder(crawler.site, jsFileUrl)
