@@ -33,7 +33,7 @@ func NewCrawler(site string, cmd *cobra.Command) *Crawler {
 		Logger.Error("Failed to parse domain")
 		os.Exit(1)
 	}
-	Logger.Infof("Crawling domain %s", domain)
+	Logger.Infof("Crawling site: %s", site)
 
 	maxDepth, _ := cmd.Flags().GetInt("depth")
 	concurrent, _ := cmd.Flags().GetInt("concurrent")

@@ -79,9 +79,9 @@ func run(cmd *cobra.Command, args []string) {
 	if siteInput != "" {
 		siteList = append(siteList, siteInput)
 	}
-	sitesInput, _ := cmd.Flags().GetString("sites")
-	if sitesInput != "" {
-		sitesFile, err := os.Open(siteInput)
+	sitesListInput, _ := cmd.Flags().GetString("sites")
+	if sitesListInput != "" {
+		sitesFile, err := os.Open(sitesListInput)
 		if err != nil {
 			core.Logger.Error(err)
 			os.Exit(1)
