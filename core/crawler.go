@@ -45,6 +45,7 @@ func NewCrawler(site string, cmd *cobra.Command) *Crawler {
 		colly.MaxDepth(maxDepth),
 		colly.IgnoreRobotsTxt(),
 	)
+
 	// Setup http client
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -159,7 +160,7 @@ func NewCrawler(site string, cmd *cobra.Command) *Crawler {
 	}
 
 	// Set blacklist url regex
-	disallowedRegex := `.(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|ico|svg)(?:\?|#|$)`
+	disallowedRegex := `.(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|ico)(?:\?|#|$)`
 	c.DisallowedURLFilters = append(c.DisallowedURLFilters, regexp.MustCompile(disallowedRegex))
 
 	// Set optional blacklist url regex
@@ -221,7 +222,6 @@ func (crawler *Crawler) Start() {
 			return
 		}
 		if !jsFileSet.Duplicate(jsFileUrl) {
-			// Use regex to parse javascript file have main domain
 			outputFormat := fmt.Sprintf("[javascript] - %s", jsFileUrl)
 			Logger.Info(outputFormat + "\n")
 			if crawler.Output != nil {
