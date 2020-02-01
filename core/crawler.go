@@ -281,7 +281,7 @@ func (crawler *Crawler) Start() {
 		// Verify which links are working
 		u := response.Request.URL.String()
 		if crawler.domainRe.MatchString(u) {
-			outputFormat := fmt.Sprintf("[url] - %d - %s", response.StatusCode, u)
+			outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
 			Logger.Info(outputFormat + "\n")
 			if crawler.Output != nil {
 				crawler.Output.WriteToFile(outputFormat)
