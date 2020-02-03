@@ -16,8 +16,7 @@ import (
 
 var commands = &cobra.Command{
 	Use:   core.CLIName,
-	Short: "A Simple Web Spider",
-	Long:  fmt.Sprintf("A Simple Web Spider by %v", core.AUTHOR),
+	Long:  fmt.Sprintf("A Simple Web Spider - %v by %v", core.VERSION, core.AUTHOR),
 	Run:   run,
 }
 

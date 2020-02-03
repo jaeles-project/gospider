@@ -21,7 +21,7 @@ go get -u github.com/theblackturtle/gospider
 
 ## Usage
 ```
-A Simple Web Spider by @theblackturtle
+A Simple Web Spider - v1.0 by @theblackturtle
 
 Usage:
   gospider [flags]
