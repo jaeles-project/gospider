@@ -152,7 +152,9 @@ func run(cmd *cobra.Command, args []string) {
 						for _, url := range urls {
 							outputFormat := fmt.Sprintf("[other-sources] - %s", url)
 							core.Logger.Info(outputFormat + "\n")
-							crawler.Output.WriteToFile(outputFormat)
+							if crawler.Output != nil {
+								crawler.Output.WriteToFile(outputFormat)
+							}
 							_ = crawler.C.Visit(url)
 						}
 					}()
