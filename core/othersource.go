@@ -57,7 +57,7 @@ type fetchFn func(string) ([]wurl, error)
 
 func getWaybackURLs(domain string) ([]wurl, error) {
 	res, err := http.Get(
-		fmt.Sprintf("http://web.archive.org/cdx/search/cdx?url=*.%s/*&Output=json&collapse=urlkey", domain),
+		fmt.Sprintf("http://web.archive.org/cdx/search/cdx?url=*.%s/*&output=json&collapse=urlkey", domain),
 	)
 	if err != nil {
 		return []wurl{}, err
@@ -92,7 +92,7 @@ func getWaybackURLs(domain string) ([]wurl, error) {
 
 func getCommonCrawlURLs(domain string) ([]wurl, error) {
 	res, err := http.Get(
-		fmt.Sprintf("http://index.commoncrawl.org/CC-MAIN-2019-51-index?url=*.%s/*&Output=json", domain),
+		fmt.Sprintf("http://index.commoncrawl.org/CC-MAIN-2019-51-index?url=*.%s/*&output=json", domain),
 	)
 	if err != nil {
 		return []wurl{}, err
