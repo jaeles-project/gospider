@@ -221,6 +221,11 @@ func (crawler *Crawler) Start() {
 		if jsFileUrl == "" {
 			return
 		}
+
+		if GetExtType(jsFileUrl) != ".js" {
+			return
+		}
+
 		if !jsFileSet.Duplicate(jsFileUrl) {
 			outputFormat := fmt.Sprintf("[javascript] - %s", jsFileUrl)
 			Logger.Info(outputFormat + "\n")
@@ -329,7 +334,7 @@ func (crawler *Crawler) linkFinder(site string, jsUrl string) {
 		}
 
 		// JS Regex Result
-		outputFormat := fmt.Sprintf("[linkfinder] - %s - %s", link, jsUrl)
+		outputFormat := fmt.Sprintf("[linkfinder] - [from: %s] - %s", jsUrl, link)
 		Logger.Info(outputFormat + "\n")
 		if crawler.Output != nil {
 			crawler.Output.WriteToFile(outputFormat)

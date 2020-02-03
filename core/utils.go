@@ -2,11 +2,10 @@ package core
 
 import (
 	"fmt"
-	"github.com/gocolly/colly"
 	"golang.org/x/net/publicsuffix"
 	"net/http"
 	"net/url"
-	"path/filepath"
+	"path"
 	"strings"
 )
 
@@ -75,6 +74,10 @@ func LoadCookies(rawCookie string) []*http.Cookie {
 	return httpCookies
 }
 
-func GetExtType(r *colly.Request) string {
-	return filepath.Ext(r.URL.Path)
+func GetExtType(rawUrl string) string {
+	u, err := url.Parse(rawUrl)
+	if err != nil {
+		return ""
+	}
+	return path.Ext(u.Path)
 }
