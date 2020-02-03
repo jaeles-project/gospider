@@ -36,10 +36,7 @@ func ParseRobots(site string, depth int, output *Output, c *colly.Collector, wg 
 				if output != nil {
 					output.WriteToFile(outputFormat)
 				}
-
-				if depth > 1 {
-					_ = c.Visit(url)
-				}
+				_ = c.Visit(url)
 			}
 		}
 	}

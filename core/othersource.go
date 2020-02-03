@@ -157,5 +157,4 @@ func getVirusTotalURLs(domain string) ([]wurl, error) {
 	}
 
 	return out, nil
-
 }
