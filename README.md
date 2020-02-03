@@ -46,7 +46,8 @@ Flags:
   -K, --random-delay int     RandomDelay is the extra randomized duration to wait added to Delay before creating a new request (second)
       --sitemap              Try to crawl sitemap.xml
       --robots               Try to crawl robots.txt (default true)
-      --other-source         Find url from another sources
+  -a, --other-source         Find URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com)
+  -w, --include-subs         Include subdomains crawled from 3rd party. Default is main domain
       --debug                Turn on debug mode
       --no-redirect          Disable redirect
   -h, --help                 help for gospider
@@ -55,22 +56,38 @@ Flags:
 ## Example commands
 #### Run with single site
 ```
-webcrawler -s "https://google.com/" -o output -c 10 -d 1 --other-source
+gospider -s "https://google.com/" -o output -c 10 -d 1
 ```
 
 #### Run with site list
 ```
-webcrawler -S sites.txt -o output -c 10 -d 1 -t 5 --other-source
+gospider -S sites.txt -o output -c 10 -d 1
+```
+
+#### Run with 20 sites at the same time with 10 bot each site
+```
+gospider -S sites.txt -o output -c 10 -d 1 -t 20
+```
+
+#### Also get URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com)
+```
+gospider -s "https://google.com/" -o output -c 10 -d 1 --other-source
+```
+
+#### Also get URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com) and include subdomains
+```
+gospider -s "https://google.com/" -o output -c 10 -d 1 --other-source --include-subs
 ```
 
 #### Use custom header/cookies
 ```
-webcrawler -s "https://google.com/" -o output -c 10 -d 1 --other-source -H "Accept: */*" --cookie "testA=a; testB=b"
+gospider -s "https://google.com/" -o output -c 10 -d 1 --other-source -H "Accept: */*" -H "Test: test" --cookie "testA=a; testB=b"
 
-webcrawler -s "https://google.com/" -o output -c 10 -d 1 --other-source --burp burp_req.txt
+gospider -s "https://google.com/" -o output -c 10 -d 1 --other-source --burp burp_req.txt
 ```
 
-#### Blacklist url/file extension
+#### Blacklist url/file extension.
+**P/s**: gospider blacklisted `.(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico)` as default
 ```
-webcrawler -s "https://google.com/" -o output -c 10 -d 1 --blacklist ".(woff|pdf)"
-   ```
+gospider -s "https://google.com/" -o output -c 10 -d 1 --blacklist ".(woff|pdf)"
+```

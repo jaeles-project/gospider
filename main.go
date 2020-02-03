@@ -40,7 +40,8 @@ func main() {
 
 	commands.Flags().BoolP("sitemap", "", false, "Try to crawl sitemap.xml")
 	commands.Flags().BoolP("robots", "", true, "Try to crawl robots.txt")
-	commands.Flags().BoolP("other-source", "", false, "Find url from another sources")
+	commands.Flags().BoolP("other-source", "a", false, "Find URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com)")
+	commands.Flags().BoolP("include-subs", "w", false, "Include subdomains crawled from 3rd party. Default is main domain")
 
 	commands.Flags().BoolP("debug", "", false, "Turn on debug mode")
 	commands.Flags().BoolP("no-redirect", "", false, "Disable redirect")
@@ -107,6 +108,7 @@ func run(cmd *cobra.Command, args []string) {
 	sitemap, _ := cmd.Flags().GetBool("sitemap")
 	robots, _ := cmd.Flags().GetBool("robots")
 	otherSource, _ := cmd.Flags().GetBool("other-source")
+	includeSubs, _ := cmd.Flags().GetBool("include-subs")
 	maxDepth, _ := cmd.Flags().GetInt("depth")
 
 	var wg sync.WaitGroup
@@ -147,8 +149,11 @@ func run(cmd *cobra.Command, args []string) {
 					siteWg.Add(1)
 					go func() {
 						defer siteWg.Done()
-						urls := core.OtherSources(core.GetDomain(site))
+						urls := core.OtherSources(core.GetHostname(site), includeSubs)
 						for _, url := range urls {
+							outputFormat := fmt.Sprintf("[other-sources] - %s", url)
+							core.Logger.Info(outputFormat + "\n")
+							crawler.Output.WriteToFile(outputFormat)
 							_ = crawler.C.Visit(url)
 						}
 					}()

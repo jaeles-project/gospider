@@ -10,7 +10,11 @@ import (
 	"sync"
 )
 
-func OtherSources(domain string) []string {
+func OtherSources(domain string, includeSubs bool) []string {
+	noSubs := true
+	if includeSubs {
+		noSubs = false
+	}
 	var urls []string
 
 	fetchFns := []fetchFn{
@@ -27,7 +31,7 @@ func OtherSources(domain string) []string {
 		fetch := fn
 		go func() {
 			defer wg.Done()
-			resp, err := fetch(domain)
+			resp, err := fetch(domain, noSubs)
 			if err != nil {
 				return
 			}
@@ -53,11 +57,15 @@ type wurl struct {
 	url  string
 }
 
-type fetchFn func(string) ([]wurl, error)
+type fetchFn func(string, bool) ([]wurl, error)
 
-func getWaybackURLs(domain string) ([]wurl, error) {
+func getWaybackURLs(domain string, noSubs bool) ([]wurl, error) {
+	subsWildcard := "*."
+	if noSubs {
+		subsWildcard = ""
+	}
 	res, err := http.Get(
-		fmt.Sprintf("http://web.archive.org/cdx/search/cdx?url=*.%s/*&output=json&collapse=urlkey", domain),
+		fmt.Sprintf("http://web.archive.org/cdx/search/cdx?url=%s%s/*&output=json&collapse=urlkey", subsWildcard, domain),
 	)
 	if err != nil {
 		return []wurl{}, err
@@ -90,9 +98,13 @@ func getWaybackURLs(domain string) ([]wurl, error) {
 
 }
 
-func getCommonCrawlURLs(domain string) ([]wurl, error) {
+func getCommonCrawlURLs(domain string, noSubs bool) ([]wurl, error) {
+	subsWildcard := "*."
+	if noSubs {
+		subsWildcard = ""
+	}
 	res, err := http.Get(
-		fmt.Sprintf("http://index.commoncrawl.org/CC-MAIN-2019-51-index?url=*.%s/*&output=json", domain),
+		fmt.Sprintf("http://index.commoncrawl.org/CC-MAIN-2019-51-index?url=%s%s/*&output=json", subsWildcard, domain),
 	)
 	if err != nil {
 		return []wurl{}, err
@@ -121,7 +133,7 @@ func getCommonCrawlURLs(domain string) ([]wurl, error) {
 
 }
 
-func getVirusTotalURLs(domain string) ([]wurl, error) {
+func getVirusTotalURLs(domain string, noSubs bool) ([]wurl, error) {
 	out := make([]wurl, 0)
 
 	apiKey := os.Getenv("VT_API_KEY")

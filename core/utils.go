@@ -30,6 +30,14 @@ func GetDomain(s string) string {
 	return domain
 }
 
+func GetHostname(s string) string {
+	u, err := url.Parse(s)
+	if err != nil {
+		return ""
+	}
+	return u.Hostname()
+}
+
 func FixUrl(url, site string) string {
 	var newUrl string
 
