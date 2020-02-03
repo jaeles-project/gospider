@@ -160,7 +160,7 @@ func NewCrawler(site string, cmd *cobra.Command) *Crawler {
 	}
 
 	// Set blacklist url regex
-	disallowedRegex := `.(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|ico)(?:\?|#|$)`
+	disallowedRegex := `.(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico)(?:\?|#|$)`
 	c.DisallowedURLFilters = append(c.DisallowedURLFilters, regexp.MustCompile(disallowedRegex))
 
 	// Set optional blacklist url regex
@@ -342,5 +342,4 @@ func (crawler *Crawler) linkFinder(site string, jsUrl string) {
 		// Try to request JS path
 		_ = crawler.C.Visit(FixUrl(link, site))
 	}
-
 }
