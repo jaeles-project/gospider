@@ -3,3 +3,4 @@ gospider
 out*/
 .idea/
 *.txt
+dist/
