@@ -1,0 +1,25 @@
+builds:
+  - binary: ffuf
+    goos:
+      - linux
+      - windows
+      - freebsd
+      - openbsd
+      - darwin
+    goarch:
+      - amd64
+      - 386
+      - arm
+      - arm64
+
+archives:
+  - id: tgz
+    format: tar.gz
+    replacements:
+      darwin: macOS
+    format_overrides:
+      - goos: windows
+        format: zip
+
+signs:
+  - artifacts: checksum
