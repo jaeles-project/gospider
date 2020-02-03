@@ -138,7 +138,8 @@ func NewCrawler(site string, cmd *cobra.Command) *Crawler {
 	var output *Output
 	outputFolder, _ := cmd.Flags().GetString("output")
 	if outputFolder != "" {
-		filename := strings.ReplaceAll(domain, ".", "_")
+		oUrl, _ := url.Parse(site)
+		filename := strings.ReplaceAll(oUrl.Hostname(), ".", "_")
 		output = NewOutput(outputFolder, filename)
 	}
 
