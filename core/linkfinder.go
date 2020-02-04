@@ -28,6 +28,6 @@ func ParseJSSource(source string) ([]string, error) {
 		}
 		links = append(links, matchGroup1)
 	}
-	links = unique(links)
+	links = Unique(links)
 	return links, nil
 }

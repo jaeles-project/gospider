@@ -138,8 +138,7 @@ func NewCrawler(site string, cmd *cobra.Command) *Crawler {
 	var output *Output
 	outputFolder, _ := cmd.Flags().GetString("output")
 	if outputFolder != "" {
-		oUrl, _ := url.Parse(site)
-		filename := strings.ReplaceAll(oUrl.Hostname(), ".", "_")
+		filename := strings.ReplaceAll(GetHostname(site), ".", "_")
 		output = NewOutput(outputFolder, filename)
 	}
 
@@ -243,18 +242,6 @@ func (crawler *Crawler) Start() {
 	crawler.C.OnResponse(func(response *colly.Response) {
 		respStr := string(response.Body)
 
-		//// Use regex to get links in all response code
-		//urls, err := ParseJSSource(respStr, site)
-		//if err != nil {
-		//	Logger.Error(err)
-		//	return
-		//}
-		//// request with depth = 0
-		//for _, u := range urls {
-		//	Logger.Debugf("Regex url: %s", u)
-		//	_ = c.Visit(u)
-		//}
-
 		// Parse subdomains from source
 		subs := GetSubdomains(respStr, crawler.domain)
 		for _, sub := range subs {
@@ -295,7 +282,6 @@ func (crawler *Crawler) Start() {
 		}
 	})
 	_ = crawler.C.Visit(crawler.site)
-	crawler.C.Wait()
 }
 
 // This function will request and parse external javascript

@@ -42,20 +42,24 @@ func FixUrl(url, site string) string {
 	var newUrl string
 
 	if strings.HasPrefix(url, "http") {
+		// http://google.com || https://google.com
 		newUrl = url
 	} else if strings.HasPrefix(url, "//") {
+		// //google.com/example.php
 		newUrl = "https:" + url
 	} else if !strings.HasPrefix(url, "http") && len(url) > 0 {
-		if url[:1] == "/" { // Ex: /?thread=10
+		if url[:1] == "/" {
+			// Ex: /?thread=10
 			newUrl = site + url
-		} else { // Ex: ?thread=10
+		} else {
+			// Ex: ?thread=10
 			newUrl = site + "/" + url
 		}
 	}
 	return newUrl
 }
 
-func unique(intSlice []string) []string {
+func Unique(intSlice []string) []string {
 	keys := make(map[string]bool)
 	var list []string
 	for _, entry := range intSlice {
@@ -88,4 +92,10 @@ func GetExtType(rawUrl string) string {
 		return ""
 	}
 	return path.Ext(u.Path)
+}
+
+func CleanSubdomain(s string) string {
+	s = strings.TrimPrefix(s, "*.")
+	s = strings.TrimPrefix(s, "u002F")
+	return s
 }

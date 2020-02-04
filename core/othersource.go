@@ -49,7 +49,7 @@ func OtherSources(domain string, includeSubs bool) []string {
 			urls = append(urls, w.url)
 		}
 	}
-	return unique(urls)
+	return Unique(urls)
 }
 
 type wurl struct {
