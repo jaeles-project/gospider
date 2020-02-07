@@ -150,6 +150,10 @@ func run(cmd *cobra.Command, args []string) {
 						defer siteWg.Done()
 						urls := core.OtherSources(core.GetHostname(site), includeSubs)
 						for _, url := range urls {
+							url = strings.TrimSpace(url)
+							if len(url) == 0{
+								continue
+							}
 							outputFormat := fmt.Sprintf("[other-sources] - %s", url)
 							core.Logger.Info(outputFormat + "\n")
 							if crawler.Output != nil {
