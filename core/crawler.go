@@ -279,13 +279,22 @@ func (crawler *Crawler) Start() {
 		u := response.Request.URL.String()
 		if crawler.domainRe.MatchString(u) {
 			outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
-			//Logger.Info(outputFormat + "\n")
 			fmt.Println(outputFormat)
 			if crawler.Output != nil {
 				crawler.Output.WriteToFile(outputFormat)
 			}
 		}
 	})
+
+	crawler.C.OnError(func(response *colly.Response, err error) {
+		u := response.Request.URL.String()
+		outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
+		fmt.Println(outputFormat)
+		if crawler.Output != nil {
+			crawler.Output.WriteToFile(outputFormat)
+		}
+	})
+
 	_ = crawler.C.Visit(crawler.site)
 }
 
