@@ -46,6 +46,7 @@ func main() {
 	commands.Flags().BoolP("debug", "", false, "Turn on debug mode")
 	commands.Flags().BoolP("verbose", "v", false, "Turn on verbose")
 	commands.Flags().BoolP("no-redirect", "", false, "Disable redirect")
+	commands.Flags().BoolP("version", "", false, "Check version")
 
 	commands.Flags().SortFlags = false
 	if err := commands.Execute(); err != nil {
@@ -58,6 +59,12 @@ func run(cmd *cobra.Command, args []string) {
 	if cmd.Flags().NFlag() == 0 {
 		cmd.HelpFunc()(cmd, args)
 		os.Exit(1)
+	}
+
+	version, _ := cmd.Flags().GetBool("version")
+	if version{
+		fmt.Printf("Version: %s",core.VERSION)
+		os.Exit(0)
 	}
 
 	isDebug, _ := cmd.Flags().GetBool("debug")

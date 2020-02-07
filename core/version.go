@@ -3,5 +3,5 @@ package core
 const (
 	CLIName = "gospider"
 	AUTHOR  = "@theblackturtle"
-	VERSION = "v1.0.2"
+	VERSION = "v1.0.3"
 )
