@@ -205,7 +205,8 @@ func (crawler *Crawler) Start() {
 		if !formSet.Duplicate(formUrl) {
 			if crawler.domainRe.MatchString(formUrl) {
 				outputFormat := fmt.Sprintf("[form] - %s", formUrl)
-				Logger.Info(outputFormat + "\n")
+				//Logger.Info(outputFormat + "\n")
+				fmt.Println(outputFormat)
 				if crawler.Output != nil {
 					crawler.Output.WriteToFile(outputFormat)
 				}
@@ -228,7 +229,8 @@ func (crawler *Crawler) Start() {
 
 		if !jsFileSet.Duplicate(jsFileUrl) {
 			outputFormat := fmt.Sprintf("[javascript] - %s", jsFileUrl)
-			Logger.Info(outputFormat + "\n")
+			//Logger.Info(outputFormat + "\n")
+			fmt.Println(outputFormat)
 			if crawler.Output != nil {
 				crawler.Output.WriteToFile(outputFormat)
 			}
@@ -247,7 +249,8 @@ func (crawler *Crawler) Start() {
 		for _, sub := range subs {
 			if !subSet.Duplicate(sub) {
 				outputFormat := fmt.Sprintf("[subdomains] - %s", sub)
-				Logger.Info(outputFormat + "\n")
+				//Logger.Info(outputFormat + "\n")
+				fmt.Println(outputFormat)
 				if crawler.Output != nil {
 					crawler.Output.WriteToFile(outputFormat)
 				}
@@ -259,7 +262,8 @@ func (crawler *Crawler) Start() {
 		for _, e := range aws {
 			if !awsSet.Duplicate(e) {
 				outputFormat := fmt.Sprintf("[aws-s3] - %s", e)
-				Logger.Info(outputFormat + "\n")
+				//Logger.Info(outputFormat + "\n")
+				fmt.Println(outputFormat)
 				if crawler.Output != nil {
 					crawler.Output.WriteToFile(outputFormat)
 				}
@@ -275,7 +279,8 @@ func (crawler *Crawler) Start() {
 		u := response.Request.URL.String()
 		if crawler.domainRe.MatchString(u) {
 			outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
-			Logger.Info(outputFormat + "\n")
+			//Logger.Info(outputFormat + "\n")
+			fmt.Println(outputFormat)
 			if crawler.Output != nil {
 				crawler.Output.WriteToFile(outputFormat)
 			}
@@ -322,7 +327,8 @@ func (crawler *Crawler) linkFinder(site string, jsUrl string) {
 
 		// JS Regex Result
 		outputFormat := fmt.Sprintf("[linkfinder] - [from: %s] - %s", jsUrl, link)
-		Logger.Info(outputFormat + "\n")
+		//Logger.Info(outputFormat + "\n")
+		fmt.Println(outputFormat)
 		if crawler.Output != nil {
 			crawler.Output.WriteToFile(outputFormat)
 		}

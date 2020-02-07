@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/theblackturtle/gospider/core"
+	"io/ioutil"
 	"net/url"
 
 	"os"
@@ -15,9 +16,9 @@ import (
 )
 
 var commands = &cobra.Command{
-	Use:   core.CLIName,
-	Long:  fmt.Sprintf("A Simple Web Spider - %v by %v", core.VERSION, core.AUTHOR),
-	Run:   run,
+	Use:  core.CLIName,
+	Long: fmt.Sprintf("A Simple Web Spider - %v by %v", core.VERSION, core.AUTHOR),
+	Run:  run,
 }
 
 func main() {
@@ -43,6 +44,7 @@ func main() {
 	commands.Flags().BoolP("include-subs", "w", false, "Include subdomains crawled from 3rd party. Default is main domain")
 
 	commands.Flags().BoolP("debug", "", false, "Turn on debug mode")
+	commands.Flags().BoolP("verbose", "v", false, "Turn on verbose")
 	commands.Flags().BoolP("no-redirect", "", false, "Disable redirect")
 
 	commands.Flags().SortFlags = false
@@ -63,6 +65,11 @@ func run(cmd *cobra.Command, args []string) {
 		core.Logger.SetLevel(logrus.DebugLevel)
 	} else {
 		core.Logger.SetLevel(logrus.InfoLevel)
+	}
+
+	verbose, _ := cmd.Flags().GetBool("verbose")
+	if !verbose {
+		core.Logger.SetOutput(ioutil.Discard)
 	}
 
 	// Create output folder when save file option selected
@@ -151,11 +158,12 @@ func run(cmd *cobra.Command, args []string) {
 						urls := core.OtherSources(core.GetHostname(site), includeSubs)
 						for _, url := range urls {
 							url = strings.TrimSpace(url)
-							if len(url) == 0{
+							if len(url) == 0 {
 								continue
 							}
 							outputFormat := fmt.Sprintf("[other-sources] - %s", url)
-							core.Logger.Info(outputFormat + "\n")
+							//core.Logger.Info(outputFormat + "\n")
+							fmt.Println(outputFormat)
 							if crawler.Output != nil {
 								crawler.Output.WriteToFile(outputFormat)
 							}

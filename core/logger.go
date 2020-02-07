@@ -11,7 +11,6 @@ func init() {
 	Logger = logrus.New()
 	Logger.SetFormatter(&logrus.TextFormatter{
 		ForceColors:      true,
-		DisableColors:    false,
 		DisableTimestamp: true,
 	})
 	Logger.SetOutput(os.Stdout)
