@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"regexp"
 	"strings"
 )
+
+var nameStripRE = regexp.MustCompile("^((20)|(25)|(2b)|(2f)|(3d)|(3a)|(40))+")
 
 func GetRawCookie(cookies []*http.Cookie) string {
 	var rawCookies []string
@@ -95,7 +98,29 @@ func GetExtType(rawUrl string) string {
 }
 
 func CleanSubdomain(s string) string {
+	s = cleanName(s)
 	s = strings.TrimPrefix(s, "*.")
-	s = strings.TrimPrefix(s, "u002F")
+	s = strings.TrimPrefix(s,"u002f")
 	return s
+}
+
+// Clean up the names scraped from the web.
+// Get from Amass
+func cleanName(name string) string {
+	name = strings.TrimSpace(strings.ToLower(name))
+
+	for {
+		if i := nameStripRE.FindStringIndex(name); i != nil {
+			name = name[i[1]:]
+		} else {
+			break
+		}
+	}
+
+	name = strings.Trim(name, "-")
+	// Remove dots at the beginning of names
+	if len(name) > 1 && name[0] == '.' {
+		name = name[1:]
+	}
+	return name
 }
