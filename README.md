@@ -21,7 +21,7 @@ go get -u github.com/theblackturtle/gospider
 
 ## Usage
 ```
-A Simple Web Spider - v1.0 by @theblackturtle
+A Simple Web Spider - v1.0.4 by @theblackturtle
 
 Usage:
   gospider [flags]
@@ -49,7 +49,9 @@ Flags:
   -a, --other-source         Find URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com)
   -w, --include-subs         Include subdomains crawled from 3rd party. Default is main domain
       --debug                Turn on debug mode
+  -v, --verbose              Turn on verbose
       --no-redirect          Disable redirect
+      --version              Check version
   -h, --help                 help for gospider
 ```
 

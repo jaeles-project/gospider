@@ -28,3 +28,7 @@ func (o *Output) WriteToFile(msg string) {
 	defer o.mu.Unlock()
 	_, _ = o.f.WriteString(msg + "\n")
 }
+
+func (o *Output) Close() error {
+	return o.f.Close()
+}

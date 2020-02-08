@@ -18,12 +18,11 @@ func ParseSiteMap(site string, depth int, output *Output, c *colly.Collector, wg
 		Logger.Infof("Trying to find %s", site+path)
 		_ = sitemap.ParseFromSite(site+path, func(entry sitemap.Entry) error {
 			outputFormat := fmt.Sprintf("[sitemap] - %s", entry.GetLocation())
-			//Logger.Infof(outputFormat + "\n")
 			fmt.Println(outputFormat)
 			if output != nil {
 				output.WriteToFile(outputFormat)
 			}
-			c.Visit(entry.GetLocation())
+			_ = c.Visit(entry.GetLocation())
 			return nil
 		})
 	}

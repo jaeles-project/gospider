@@ -62,21 +62,23 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	version, _ := cmd.Flags().GetBool("version")
-	if version{
-		fmt.Printf("Version: %s",core.VERSION)
+	if version {
+		fmt.Printf("Version: %s\n", core.VERSION)
 		os.Exit(0)
-	}
-
-	isDebug, _ := cmd.Flags().GetBool("debug")
-	if isDebug {
-		core.Logger.SetLevel(logrus.DebugLevel)
-	} else {
-		core.Logger.SetLevel(logrus.InfoLevel)
 	}
 
 	verbose, _ := cmd.Flags().GetBool("verbose")
 	if !verbose {
 		core.Logger.SetOutput(ioutil.Discard)
+	}
+
+	isDebug, _ := cmd.Flags().GetBool("debug")
+	if isDebug {
+		core.Logger.SetLevel(logrus.DebugLevel)
+		core.Logger.SetOutput(os.Stdout)
+	} else {
+		core.Logger.SetLevel(logrus.InfoLevel)
+		core.Logger.SetOutput(os.Stdout)
 	}
 
 	// Create output folder when save file option selected
@@ -141,6 +143,7 @@ func run(cmd *cobra.Command, args []string) {
 
 				crawler := core.NewCrawler(site, cmd)
 				site = strings.TrimSuffix(u.String(), "/")
+
 				siteWg.Add(1)
 				go func() {
 					crawler.Start()
@@ -169,7 +172,6 @@ func run(cmd *cobra.Command, args []string) {
 								continue
 							}
 							outputFormat := fmt.Sprintf("[other-sources] - %s", url)
-							//core.Logger.Info(outputFormat + "\n")
 							fmt.Println(outputFormat)
 							if crawler.Output != nil {
 								crawler.Output.WriteToFile(outputFormat)
@@ -180,6 +182,7 @@ func run(cmd *cobra.Command, args []string) {
 				}
 				siteWg.Wait()
 				crawler.C.Wait()
+				_ = crawler.Output.Close()
 			}
 		}()
 	}

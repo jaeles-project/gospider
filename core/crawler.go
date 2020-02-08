@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/theblackturtle/gospider/stringset"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -48,8 +49,18 @@ func NewCrawler(site string, cmd *cobra.Command) *Crawler {
 
 	// Setup http client
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		DialContext: (&net.Dialer{
+			Timeout:   60 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          0,
+		IdleConnTimeout:       5 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 5 * time.Second,
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 	}
+
 	// Set proxy
 	proxy, _ := cmd.Flags().GetString("proxy")
 	if proxy != "" {
@@ -143,16 +154,15 @@ func NewCrawler(site string, cmd *cobra.Command) *Crawler {
 	}
 
 	// Set url whitelist regex
-	domainRegex := "^(https?|mms|mssx|mmsh|rtsp|pnm)://([^/]+[.])?(?i:" + strings.ReplaceAll(domain, ".", "[.]") + ")(/.*)?$"
-	domainRe := regexp.MustCompile(domainRegex)
+	domainRe := regexp.MustCompile(domain)
 	c.URLFilters = append(c.URLFilters, domainRe)
 
 	// Set Limit Rule
 	err := c.Limit(&colly.LimitRule{
-		DomainRegexp: domainRegex,
-		Parallelism:  concurrent,
-		Delay:        time.Duration(delay) * time.Second,
-		RandomDelay:  time.Duration(randomDelay) * time.Second,
+		DomainGlob:  domain,
+		Parallelism: concurrent,
+		Delay:       time.Duration(delay) * time.Second,
+		RandomDelay: time.Duration(randomDelay) * time.Second,
 	})
 	if err != nil {
 		Logger.Errorf("Failed to set Limit Rule: %s", err)
@@ -205,7 +215,6 @@ func (crawler *Crawler) Start() {
 		if !formSet.Duplicate(formUrl) {
 			if crawler.domainRe.MatchString(formUrl) {
 				outputFormat := fmt.Sprintf("[form] - %s", formUrl)
-				//Logger.Info(outputFormat + "\n")
 				fmt.Println(outputFormat)
 				if crawler.Output != nil {
 					crawler.Output.WriteToFile(outputFormat)
@@ -229,7 +238,6 @@ func (crawler *Crawler) Start() {
 
 		if !jsFileSet.Duplicate(jsFileUrl) {
 			outputFormat := fmt.Sprintf("[javascript] - %s", jsFileUrl)
-			//Logger.Info(outputFormat + "\n")
 			fmt.Println(outputFormat)
 			if crawler.Output != nil {
 				crawler.Output.WriteToFile(outputFormat)
@@ -249,7 +257,6 @@ func (crawler *Crawler) Start() {
 		for _, sub := range subs {
 			if !subSet.Duplicate(sub) {
 				outputFormat := fmt.Sprintf("[subdomains] - %s", sub)
-				//Logger.Info(outputFormat + "\n")
 				fmt.Println(outputFormat)
 				if crawler.Output != nil {
 					crawler.Output.WriteToFile(outputFormat)
@@ -262,7 +269,6 @@ func (crawler *Crawler) Start() {
 		for _, e := range aws {
 			if !awsSet.Duplicate(e) {
 				outputFormat := fmt.Sprintf("[aws-s3] - %s", e)
-				//Logger.Info(outputFormat + "\n")
 				fmt.Println(outputFormat)
 				if crawler.Output != nil {
 					crawler.Output.WriteToFile(outputFormat)
@@ -270,23 +276,20 @@ func (crawler *Crawler) Start() {
 			}
 		}
 
-		// We will pass 404 Not Found and 429 status code
-		if response.StatusCode == 404 || response.StatusCode == 429 {
-			return
-		}
-
 		// Verify which links are working
 		u := response.Request.URL.String()
-		if crawler.domainRe.MatchString(u) {
-			outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
-			fmt.Println(outputFormat)
-			if crawler.Output != nil {
-				crawler.Output.WriteToFile(outputFormat)
-			}
+		outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
+		fmt.Println(outputFormat)
+		if crawler.Output != nil {
+			crawler.Output.WriteToFile(outputFormat)
 		}
 	})
 
 	crawler.C.OnError(func(response *colly.Response, err error) {
+		// Status == 0 mean "The server IP address could not be found."
+		if response.StatusCode == 404 || response.StatusCode == 429 || response.StatusCode == 0 {
+			return
+		}
 		u := response.Request.URL.String()
 		outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
 		fmt.Println(outputFormat)
@@ -336,7 +339,6 @@ func (crawler *Crawler) linkFinder(site string, jsUrl string) {
 
 		// JS Regex Result
 		outputFormat := fmt.Sprintf("[linkfinder] - [from: %s] - %s", jsUrl, link)
-		//Logger.Info(outputFormat + "\n")
 		fmt.Println(outputFormat)
 		if crawler.Output != nil {
 			crawler.Output.WriteToFile(outputFormat)
