@@ -32,7 +32,7 @@ func ParseRobots(site string, depth int, output *Output, c *colly.Collector, wg 
 				url := re.ReplaceAllString(line, "")
 				url = site + url
 				outputFormat := fmt.Sprintf("[robots] - %s", url)
-				Logger.Info(outputFormat + "\n")
+				fmt.Println(outputFormat)
 				if output != nil {
 					output.WriteToFile(outputFormat)
 				}

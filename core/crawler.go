@@ -242,6 +242,13 @@ func (crawler *Crawler) Start() {
 			if crawler.Output != nil {
 				crawler.Output.WriteToFile(outputFormat)
 			}
+
+			// If JS file is minimal format. Try to find original format
+			if strings.Contains(jsFileUrl, ".min.js"){
+				originalJS := strings.ReplaceAll(jsFileUrl,".min.js",".js")
+				crawler.linkFinder(crawler.site, originalJS)
+			}
+
 			// Request and Get JS link
 			crawler.linkFinder(crawler.site, jsFileUrl)
 		}
