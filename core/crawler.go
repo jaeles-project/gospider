@@ -301,6 +301,7 @@ func (crawler *Crawler) Start() {
 		// Retry if status code == 999
 		if response.StatusCode == 999 {
 			_ = response.Request.Retry()
+			return
 		}
 
 		u := response.Request.URL.String()
