@@ -297,6 +297,12 @@ func (crawler *Crawler) Start() {
 		if response.StatusCode == 404 || response.StatusCode == 429 || response.StatusCode == 0 {
 			return
 		}
+
+		// Retry if status code == 999
+		if response.StatusCode == 999 {
+			_ = response.Request.Retry()
+		}
+
 		u := response.Request.URL.String()
 		outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
 		fmt.Println(outputFormat)
