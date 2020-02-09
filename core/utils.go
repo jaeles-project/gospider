@@ -100,7 +100,7 @@ func GetExtType(rawUrl string) string {
 func CleanSubdomain(s string) string {
 	s = cleanName(s)
 	s = strings.TrimPrefix(s, "*.")
-	s = strings.TrimPrefix(s,"u002f")
+	s = strings.TrimPrefix(s, "u002f")
 	return s
 }
 
@@ -123,4 +123,8 @@ func cleanName(name string) string {
 		name = name[1:]
 	}
 	return name
+}
+
+func FilterNewLines(s string) string {
+	return regexp.MustCompile(`[\t\r\n]+`).ReplaceAllString(strings.TrimSpace(s), " ")
 }

@@ -22,7 +22,7 @@ func ParseJSSource(source string) ([]string, error) {
 
 	match := JSRegex.FindAllStringSubmatch(source, -1)
 	for _, m := range match {
-		matchGroup1 := strings.TrimSpace(m[1])
+		matchGroup1 := FilterNewLines(m[1])
 		if matchGroup1 == "" {
 			continue
 		}
