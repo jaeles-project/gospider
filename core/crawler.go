@@ -24,6 +24,12 @@ type Crawler struct {
 	Output   *Output
 	domainRe *regexp.Regexp
 
+	subSet  *stringset.StringFilter
+	awsSet  *stringset.StringFilter
+	jsSet   *stringset.StringFilter
+	urlSet  *stringset.StringFilter
+	formSet *stringset.StringFilter
+
 	site   string
 	domain string
 }
@@ -191,25 +197,28 @@ func NewCrawler(site string, cmd *cobra.Command) *Crawler {
 		domain:   domain,
 		Output:   output,
 		domainRe: domainRe,
+		urlSet:   stringset.NewStringFilter(),
+		subSet:   stringset.NewStringFilter(),
+		jsSet:    stringset.NewStringFilter(),
+		formSet:  stringset.NewStringFilter(),
+		awsSet:   stringset.NewStringFilter(),
 	}
 }
 
 func (crawler *Crawler) Start() {
 	// Handle url
-	urlSet := stringset.NewStringFilter()
 	crawler.C.OnHTML("[href]", func(e *colly.HTMLElement) {
 		urlString := e.Request.AbsoluteURL(e.Attr("href"))
 		urlString = FixUrl(urlString, crawler.site)
 		if urlString == "" {
 			return
 		}
-		if !urlSet.Duplicate(urlString) {
+		if !crawler.urlSet.Duplicate(urlString) {
 			_ = e.Request.Visit(urlString)
 		}
 	})
 
 	// Handle form
-	formSet := stringset.NewStringFilter()
 	crawler.C.OnHTML("form[action]", func(e *colly.HTMLElement) {
 		formUrl := e.Request.AbsoluteURL(e.Attr("action"))
 		formUrl = FixUrl(formUrl, crawler.site)
@@ -217,7 +226,7 @@ func (crawler *Crawler) Start() {
 			return
 		}
 		// Just print
-		if !formSet.Duplicate(formUrl) {
+		if !crawler.formSet.Duplicate(formUrl) {
 			if crawler.domainRe.MatchString(formUrl) {
 				outputFormat := fmt.Sprintf("[form] - %s", formUrl)
 				fmt.Println(outputFormat)
@@ -229,7 +238,6 @@ func (crawler *Crawler) Start() {
 	})
 
 	// Handle js files
-	jsFileSet := stringset.NewStringFilter()
 	crawler.C.OnHTML("[src]", func(e *colly.HTMLElement) {
 		jsFileUrl := e.Request.AbsoluteURL(e.Attr("src"))
 		jsFileUrl = FixUrl(jsFileUrl, crawler.site)
@@ -241,7 +249,7 @@ func (crawler *Crawler) Start() {
 			return
 		}
 
-		if !jsFileSet.Duplicate(jsFileUrl) {
+		if !crawler.jsSet.Duplicate(jsFileUrl) {
 			outputFormat := fmt.Sprintf("[javascript] - %s", jsFileUrl)
 			fmt.Println(outputFormat)
 			if crawler.Output != nil {
@@ -259,34 +267,11 @@ func (crawler *Crawler) Start() {
 		}
 	})
 
-	subSet := stringset.NewStringFilter()
-	awsSet := stringset.NewStringFilter()
 	crawler.C.OnResponse(func(response *colly.Response) {
 		respStr := DecodeChars(string(response.Body))
 
-		// Parse subdomains from source
-		subs := GetSubdomains(respStr, crawler.domain)
-		for _, sub := range subs {
-			if !subSet.Duplicate(sub) {
-				outputFormat := fmt.Sprintf("[subdomains] - %s", sub)
-				fmt.Println(outputFormat)
-				if crawler.Output != nil {
-					crawler.Output.WriteToFile(outputFormat)
-				}
-			}
-		}
-
-		// Grep AWS S3 from source
-		aws := GetAWSS3(respStr)
-		for _, e := range aws {
-			if !awsSet.Duplicate(e) {
-				outputFormat := fmt.Sprintf("[aws-s3] - %s", e)
-				fmt.Println(outputFormat)
-				if crawler.Output != nil {
-					crawler.Output.WriteToFile(outputFormat)
-				}
-			}
-		}
+		crawler.findSubdomains(respStr)
+		crawler.findAWSS3(respStr)
 
 		// Verify which links are working
 		u := response.Request.URL.String()
@@ -320,6 +305,34 @@ func (crawler *Crawler) Start() {
 	_ = crawler.C.Visit(crawler.site)
 }
 
+// Find subdomains from response
+func (crawler *Crawler) findSubdomains(resp string) {
+	subs := GetSubdomains(resp, crawler.domain)
+	for _, sub := range subs {
+		if !crawler.subSet.Duplicate(sub) {
+			outputFormat := fmt.Sprintf("[subdomains] - %s", sub)
+			fmt.Println(outputFormat)
+			if crawler.Output != nil {
+				crawler.Output.WriteToFile(outputFormat)
+			}
+		}
+	}
+}
+
+// Find AWS S3 from response
+func (crawler *Crawler) findAWSS3(resp string) {
+	aws := GetAWSS3(resp)
+	for _, e := range aws {
+		if !crawler.awsSet.Duplicate(e) {
+			outputFormat := fmt.Sprintf("[aws-s3] - %s", e)
+			fmt.Println(outputFormat)
+			if crawler.Output != nil {
+				crawler.Output.WriteToFile(outputFormat)
+			}
+		}
+	}
+}
+
 // This function will request and parse external javascript
 // and pass to main collector with scope setup
 func (crawler *Crawler) linkFinder(site string, jsUrl string) {
@@ -329,12 +342,18 @@ func (crawler *Crawler) linkFinder(site string, jsUrl string) {
 		return
 	}
 	// if the js file exists
-	res, err := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
-	_ = resp.Body.Close()
-	links, err := ParseJSSource(string(res))
+	defer resp.Body.Close()
+
+	respStr := string(body)
+
+	crawler.findAWSS3(respStr)
+	crawler.findSubdomains(respStr)
+
+	links, err := LinkFinder(respStr)
 	if err != nil {
 		Logger.Error(err)
 		return

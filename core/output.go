@@ -29,6 +29,6 @@ func (o *Output) WriteToFile(msg string) {
 	_, _ = o.f.WriteString(msg + "\n")
 }
 
-func (o *Output) Close() error {
-	return o.f.Close()
+func (o *Output) Close() {
+	o.f.Close()
 }

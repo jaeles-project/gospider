@@ -69,7 +69,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	verbose, _ := cmd.Flags().GetBool("verbose")
-	if !verbose {
+	if verbose {
 		core.Logger.SetOutput(ioutil.Discard)
 	}
 
@@ -183,7 +183,7 @@ func run(cmd *cobra.Command, args []string) {
 				}
 				siteWg.Wait()
 				crawler.C.Wait()
-				_ = crawler.Output.Close()
+				//_ = crawler.Output.Close()
 			}
 		}()
 	}
