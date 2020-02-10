@@ -9,16 +9,12 @@ var JSRegex = regexp.MustCompile(`(?:"|')(((?:[a-zA-Z]{1,10}://|//)[^"'/]{1,}\.[
 
 func ParseJSSource(source string) ([]string, error) {
 	var links []string
-
+	source = strings.ToLower(source)
 	if len(source) > 1000000 {
 		source = strings.ReplaceAll(source, ";", ";\r\n")
 		source = strings.ReplaceAll(source, ",", ",\r\n")
 	}
-	//newSource, err := jsbeautifier.Beautify(&source, jsbeautifier.DefaultOptions())
-	//if err != nil {
-	//	Logger.Error(err)
-	//	return []string{}, err
-	//}
+	source = DecodeChars(source)
 
 	match := JSRegex.FindAllStringSubmatch(source, -1)
 	for _, m := range match {

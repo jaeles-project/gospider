@@ -244,8 +244,8 @@ func (crawler *Crawler) Start() {
 			}
 
 			// If JS file is minimal format. Try to find original format
-			if strings.Contains(jsFileUrl, ".min.js"){
-				originalJS := strings.ReplaceAll(jsFileUrl,".min.js",".js")
+			if strings.Contains(jsFileUrl, ".min.js") {
+				originalJS := strings.ReplaceAll(jsFileUrl, ".min.js", ".js")
 				crawler.linkFinder(crawler.site, originalJS)
 			}
 
@@ -257,7 +257,7 @@ func (crawler *Crawler) Start() {
 	subSet := stringset.NewStringFilter()
 	awsSet := stringset.NewStringFilter()
 	crawler.C.OnResponse(func(response *colly.Response) {
-		respStr := string(response.Body)
+		respStr := DecodeChars(string(response.Body))
 
 		// Parse subdomains from source
 		subs := GetSubdomains(respStr, crawler.domain)

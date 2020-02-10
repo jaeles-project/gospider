@@ -128,3 +128,15 @@ func cleanName(name string) string {
 func FilterNewLines(s string) string {
 	return regexp.MustCompile(`[\t\r\n]+`).ReplaceAllString(strings.TrimSpace(s), " ")
 }
+
+func DecodeChars(s string) string {
+	source, err := url.QueryUnescape(s)
+	if err == nil {
+		s = source
+	}
+
+	// In case json encoded chars
+	replacer := strings.NewReplacer(`\u002f`, "/", `\u0026`, "&")
+	s = replacer.Replace(s)
+	return s
+}
