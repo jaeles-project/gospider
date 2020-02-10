@@ -237,6 +237,20 @@ func (crawler *Crawler) Start() {
 		}
 	})
 
+	// Find Upload Form
+	uploadFormSet := stringset.NewStringFilter()
+	crawler.C.OnHTML(`input[type="file"]`, func(e *colly.HTMLElement) {
+		uploadUrl := e.Request.URL.String()
+		if !uploadFormSet.Duplicate(uploadUrl) {
+			outputFormat := fmt.Sprintf("[upload-form] - %s", uploadUrl)
+			fmt.Println(outputFormat)
+			if crawler.Output != nil {
+				crawler.Output.WriteToFile(outputFormat)
+			}
+		}
+
+	})
+
 	// Handle js files
 	crawler.C.OnHTML("[src]", func(e *colly.HTMLElement) {
 		jsFileUrl := e.Request.AbsoluteURL(e.Attr("src"))
@@ -245,7 +259,8 @@ func (crawler *Crawler) Start() {
 			return
 		}
 
-		if GetExtType(jsFileUrl) != ".js" {
+		fileExt := GetExtType(jsFileUrl)
+		if fileExt != ".js" || fileExt != ".xml" || fileExt != ".json" {
 			return
 		}
 
@@ -369,10 +384,11 @@ func (crawler *Crawler) linkFinder(site string, jsUrl string) {
 		}
 
 		if strings.HasPrefix(link, "//") {
-			newJsPath := "https:" + link
-			if !crawler.domainRe.MatchString(newJsPath) {
+			newLink := "https:" + link
+			if !crawler.domainRe.MatchString(newLink) {
 				continue
 			}
+			link = newLink
 		}
 
 		// JS Regex Result

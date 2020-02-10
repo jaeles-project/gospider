@@ -68,11 +68,6 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	verbose, _ := cmd.Flags().GetBool("verbose")
-	if verbose {
-		core.Logger.SetOutput(ioutil.Discard)
-	}
-
 	isDebug, _ := cmd.Flags().GetBool("debug")
 	if isDebug {
 		core.Logger.SetLevel(logrus.DebugLevel)
@@ -80,6 +75,11 @@ func run(cmd *cobra.Command, args []string) {
 	} else {
 		core.Logger.SetLevel(logrus.InfoLevel)
 		core.Logger.SetOutput(os.Stdout)
+	}
+
+	verbose, _ := cmd.Flags().GetBool("verbose")
+	if !verbose && !isDebug {
+		core.Logger.SetOutput(ioutil.Discard)
 	}
 
 	// Create output folder when save file option selected
