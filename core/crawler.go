@@ -61,6 +61,11 @@ func NewCrawler(site string, cmd *cobra.Command) *Crawler {
 		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 	}
 
+	timeout, _ := cmd.Flags().GetInt("timeout")
+	if timeout > 0 {
+		c.SetRequestTimeout(time.Duration(timeout) * time.Second)
+	}
+
 	// Set proxy
 	proxy, _ := cmd.Flags().GetString("proxy")
 	if proxy != "" {

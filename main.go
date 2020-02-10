@@ -37,6 +37,7 @@ func main() {
 	commands.Flags().IntP("depth", "d", 1, "MaxDepth limits the recursion depth of visited URLs. (Set it to 0 for infinite recursion)")
 	commands.Flags().IntP("delay", "k", 0, "Delay is the duration to wait before creating a new request to the matching domains (second)")
 	commands.Flags().IntP("random-delay", "K", 0, "RandomDelay is the extra randomized duration to wait added to Delay before creating a new request (second)")
+	commands.Flags().IntP("timeout", "m", 10, "Request timeout (second)")
 
 	commands.Flags().BoolP("sitemap", "", false, "Try to crawl sitemap.xml")
 	commands.Flags().BoolP("robots", "", true, "Try to crawl robots.txt")
