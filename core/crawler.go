@@ -30,11 +30,11 @@ type Crawler struct {
 	urlSet  *stringset.StringFilter
 	formSet *stringset.StringFilter
 
-	site   string
+	site   *url.URL
 	domain string
 }
 
-func NewCrawler(site string, cmd *cobra.Command) *Crawler {
+func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	domain := GetDomain(site)
 	if domain == "" {
 		Logger.Error("Failed to parse domain")
@@ -160,7 +160,7 @@ func NewCrawler(site string, cmd *cobra.Command) *Crawler {
 	var output *Output
 	outputFolder, _ := cmd.Flags().GetString("output")
 	if outputFolder != "" {
-		filename := strings.ReplaceAll(GetHostname(site), ".", "_")
+		filename := strings.ReplaceAll(site.Hostname(), ".", "_")
 		output = NewOutput(outputFolder, filename)
 	}
 
@@ -274,11 +274,11 @@ func (crawler *Crawler) Start() {
 			// If JS file is minimal format. Try to find original format
 			if strings.Contains(jsFileUrl, ".min.js") {
 				originalJS := strings.ReplaceAll(jsFileUrl, ".min.js", ".js")
-				crawler.linkFinder(crawler.site, originalJS)
+				crawler.linkFinder(originalJS)
 			}
 
 			// Request and Get JS link
-			crawler.linkFinder(crawler.site, jsFileUrl)
+			crawler.linkFinder(jsFileUrl)
 		}
 	})
 
@@ -298,6 +298,7 @@ func (crawler *Crawler) Start() {
 	})
 
 	crawler.C.OnError(func(response *colly.Response, err error) {
+		Logger.Debugf("Error request: %s - Status code: %v - Error: %s", response.Request.URL.String(), response.StatusCode, err)
 		// Status == 0 mean "The server IP address could not be found."
 		if response.StatusCode == 404 || response.StatusCode == 429 || response.StatusCode == 0 {
 			return
@@ -317,7 +318,7 @@ func (crawler *Crawler) Start() {
 		}
 	})
 
-	_ = crawler.C.Visit(crawler.site)
+	_ = crawler.C.Visit(crawler.site.String())
 }
 
 // Find subdomains from response
@@ -350,7 +351,7 @@ func (crawler *Crawler) findAWSS3(resp string) {
 
 // This function will request and parse external javascript
 // and pass to main collector with scope setup
-func (crawler *Crawler) linkFinder(site string, jsUrl string) {
+func (crawler *Crawler) linkFinder(jsUrl string) {
 	client := http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}}
 	resp, err := client.Get(jsUrl)
 	if err != nil || resp.StatusCode != 200 {
@@ -398,6 +399,6 @@ func (crawler *Crawler) linkFinder(site string, jsUrl string) {
 			crawler.Output.WriteToFile(outputFormat)
 		}
 		// Try to request JS path
-		_ = crawler.C.Visit(FixUrl(link, site))
+		_ = crawler.C.Visit(FixUrl(link, crawler.site))
 	}
 }

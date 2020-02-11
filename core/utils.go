@@ -21,44 +21,42 @@ func GetRawCookie(cookies []*http.Cookie) string {
 	return strings.Join(rawCookies, "; ")
 }
 
-func GetDomain(s string) string {
-	u, err := url.Parse(s)
-	if err != nil {
-		return ""
-	}
-	domain, err := publicsuffix.EffectiveTLDPlusOne(u.Hostname())
+func GetDomain(site *url.URL) string {
+	domain, err := publicsuffix.EffectiveTLDPlusOne(site.Hostname())
 	if err != nil {
 		return ""
 	}
 	return domain
 }
 
-func GetHostname(s string) string {
-	u, err := url.Parse(s)
-	if err != nil {
-		return ""
-	}
-	return u.Hostname()
-}
-
-func FixUrl(url, site string) string {
+func FixUrl(url string, site *url.URL) string {
 	var newUrl string
+	if strings.HasPrefix(url, "//") {
+		// //google.com/example.php
+		newUrl = site.Scheme + ":" + url
 
-	if strings.HasPrefix(url, "http") {
+	} else if strings.HasPrefix(url, "http") {
 		// http://google.com || https://google.com
 		newUrl = url
-	} else if strings.HasPrefix(url, "//") {
-		// //google.com/example.php
-		newUrl = "https:" + url
-	} else if !strings.HasPrefix(url, "http") && len(url) > 0 {
-		if url[:1] == "/" {
+
+	} else if !strings.HasPrefix(url, "//") {
+		if strings.HasPrefix(url, "/") {
 			// Ex: /?thread=10
-			newUrl = site + url
+			newUrl = site.Scheme + "://" + site.Host + url
+
 		} else {
-			// Ex: ?thread=10
-			newUrl = site + "/" + url
+			if strings.HasPrefix(url, ".") {
+				if strings.HasPrefix(url, "..") {
+					newUrl = site.Scheme + "://" + site.Host + url[2:]
+				} else {
+					newUrl = site.Scheme + "://" + site.Host + url[1:]
+				}
+			} else {
+				newUrl = site.Scheme + "://" + site.Host + url
+			}
 		}
 	}
+	//Logger.Debugf("[Fix url] old: %s - new: %s", url, newUrl)
 	return newUrl
 }
 
@@ -136,7 +134,12 @@ func DecodeChars(s string) string {
 	}
 
 	// In case json encoded chars
-	replacer := strings.NewReplacer(`\u002f`, "/", `\u0026`, "&")
+	replacer := strings.NewReplacer(
+		`\u002f`, "/",
+		`\U002F`, "/",
+		`\u0026`, "&",
+		`\U0026`, "&",
+	)
 	s = replacer.Replace(s)
 	return s
 }

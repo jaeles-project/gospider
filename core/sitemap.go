@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"github.com/gocolly/colly"
 	sitemap "github.com/oxffaa/gopher-parse-sitemap"
+	"net/url"
 	"sync"
 )
 
-func ParseSiteMap(site string, depth int, output *Output, c *colly.Collector, wg *sync.WaitGroup) {
+func ParseSiteMap(site *url.URL, output *Output, c *colly.Collector, wg *sync.WaitGroup) {
 	defer wg.Done()
 	sitemapUrls := []string{"/sitemap.xml", "/sitemap_news.xml", "/sitemap_index.xml", "/sitemap-index.xml", "/sitemapindex.xml",
 		"/sitemap-news.xml", "/post-sitemap.xml", "/page-sitemap.xml", "/portfolio-sitemap.xml", "/home_slider-sitemap.xml", "/category-sitemap.xml",
@@ -15,8 +16,8 @@ func ParseSiteMap(site string, depth int, output *Output, c *colly.Collector, wg
 
 	for _, path := range sitemapUrls {
 		// Ignore error when that not valid sitemap.xml path
-		Logger.Infof("Trying to find %s", site+path)
-		_ = sitemap.ParseFromSite(site+path, func(entry sitemap.Entry) error {
+		Logger.Infof("Trying to find %s", site.String()+path)
+		_ = sitemap.ParseFromSite(site.String()+path, func(entry sitemap.Entry) error {
 			outputFormat := fmt.Sprintf("[sitemap] - %s", entry.GetLocation())
 			fmt.Println(outputFormat)
 			if output != nil {

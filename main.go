@@ -71,10 +71,8 @@ func run(cmd *cobra.Command, args []string) {
 	isDebug, _ := cmd.Flags().GetBool("debug")
 	if isDebug {
 		core.Logger.SetLevel(logrus.DebugLevel)
-		core.Logger.SetOutput(os.Stdout)
 	} else {
 		core.Logger.SetLevel(logrus.InfoLevel)
-		core.Logger.SetOutput(os.Stdout)
 	}
 
 	verbose, _ := cmd.Flags().GetBool("verbose")
@@ -125,7 +123,6 @@ func run(cmd *cobra.Command, args []string) {
 	robots, _ := cmd.Flags().GetBool("robots")
 	otherSource, _ := cmd.Flags().GetBool("other-source")
 	includeSubs, _ := cmd.Flags().GetBool("include-subs")
-	maxDepth, _ := cmd.Flags().GetInt("depth")
 
 	var wg sync.WaitGroup
 	inputChan := make(chan string, threads)
@@ -133,17 +130,15 @@ func run(cmd *cobra.Command, args []string) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for site := range inputChan {
-				u, err := url.Parse(site)
+			for rawSite := range inputChan {
+				site, err := url.Parse(rawSite)
 				if err != nil {
-					logrus.Errorf("Failed to parse: %s", site)
+					logrus.Errorf("Failed to parse %s: %s", rawSite, err)
 					continue
 				}
 
 				var siteWg sync.WaitGroup
-
 				crawler := core.NewCrawler(site, cmd)
-				site = strings.TrimSuffix(u.String(), "/")
 
 				siteWg.Add(1)
 				go func() {
@@ -151,22 +146,23 @@ func run(cmd *cobra.Command, args []string) {
 					defer siteWg.Done()
 				}()
 
-				// Brute force Sitemap/Robots path
+				// Brute force Sitemap path
 				if sitemap {
 					siteWg.Add(1)
-					go core.ParseSiteMap(site, maxDepth, crawler.Output, crawler.C, &siteWg)
+					go core.ParseSiteMap(site, crawler.Output, crawler.C, &siteWg)
 				}
 
+				// Find Robots.txt
 				if robots {
 					siteWg.Add(1)
-					go core.ParseRobots(site, maxDepth, crawler.Output, crawler.C, &siteWg)
+					go core.ParseRobots(site, crawler.Output, crawler.C, &siteWg)
 				}
 
 				if otherSource {
 					siteWg.Add(1)
 					go func() {
 						defer siteWg.Done()
-						urls := core.OtherSources(core.GetHostname(site), includeSubs)
+						urls := core.OtherSources(site.Hostname(), includeSubs)
 						for _, url := range urls {
 							url = strings.TrimSpace(url)
 							if len(url) == 0 {
@@ -183,7 +179,6 @@ func run(cmd *cobra.Command, args []string) {
 				}
 				siteWg.Wait()
 				crawler.C.Wait()
-				//_ = crawler.Output.Close()
 			}
 		}()
 	}
