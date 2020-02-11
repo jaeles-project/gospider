@@ -2,7 +2,7 @@ package core
 
 import (
 	"fmt"
-	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/v2"
 	sitemap "github.com/oxffaa/gopher-parse-sitemap"
 	"net/url"
 	"sync"
