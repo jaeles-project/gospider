@@ -60,11 +60,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 			KeepAlive: 30 * time.Second,
 			DualStack: true,
 		}).DialContext,
-		MaxIdleConns:          0,
-		IdleConnTimeout:       5 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 5 * time.Second,
-		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
 	timeout, _ := cmd.Flags().GetInt("timeout")

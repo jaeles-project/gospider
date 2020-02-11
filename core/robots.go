@@ -32,6 +32,9 @@ func ParseRobots(site *url.URL, output *Output, c *colly.Collector, wg *sync.Wai
 			if strings.Contains(line, "llow: ") {
 				url := re.ReplaceAllString(line, "")
 				url = FixUrl(url, site)
+				if url == "" {
+					continue
+				}
 				outputFormat := fmt.Sprintf("[robots] - %s", url)
 				fmt.Println(outputFormat)
 				if output != nil {
