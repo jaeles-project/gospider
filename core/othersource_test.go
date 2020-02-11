@@ -36,3 +36,12 @@ func TestGetWaybackURLs(t *testing.T) {
 	t.Log(len(urls))
 	t.Log(urls)
 }
+
+func TestGetOtxUrls(t *testing.T) {
+	urls, err := getOtxUrls(domain, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(len(urls))
+	t.Log(urls)
+}

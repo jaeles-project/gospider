@@ -256,25 +256,23 @@ func (crawler *Crawler) Start() {
 		}
 
 		fileExt := GetExtType(jsFileUrl)
-		if fileExt != ".js" || fileExt != ".xml" || fileExt != ".json" {
-			return
-		}
+		if fileExt == ".js" || fileExt == ".xml" || fileExt == ".json" {
+			if !crawler.jsSet.Duplicate(jsFileUrl) {
+				outputFormat := fmt.Sprintf("[javascript] - %s", jsFileUrl)
+				fmt.Println(outputFormat)
+				if crawler.Output != nil {
+					crawler.Output.WriteToFile(outputFormat)
+				}
 
-		if !crawler.jsSet.Duplicate(jsFileUrl) {
-			outputFormat := fmt.Sprintf("[javascript] - %s", jsFileUrl)
-			fmt.Println(outputFormat)
-			if crawler.Output != nil {
-				crawler.Output.WriteToFile(outputFormat)
+				// If JS file is minimal format. Try to find original format
+				if strings.Contains(jsFileUrl, ".min.js") {
+					originalJS := strings.ReplaceAll(jsFileUrl, ".min.js", ".js")
+					crawler.linkFinder(originalJS)
+				}
+
+				// Request and Get JS link
+				crawler.linkFinder(jsFileUrl)
 			}
-
-			// If JS file is minimal format. Try to find original format
-			if strings.Contains(jsFileUrl, ".min.js") {
-				originalJS := strings.ReplaceAll(jsFileUrl, ".min.js", ".js")
-				crawler.linkFinder(originalJS)
-			}
-
-			// Request and Get JS link
-			crawler.linkFinder(jsFileUrl)
 		}
 	})
 

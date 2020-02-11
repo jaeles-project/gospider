@@ -21,6 +21,7 @@ func OtherSources(domain string, includeSubs bool) []string {
 		getWaybackURLs,
 		getCommonCrawlURLs,
 		getVirusTotalURLs,
+		getOtxUrls,
 	}
 
 	var wg sync.WaitGroup
@@ -169,4 +170,46 @@ func getVirusTotalURLs(domain string, noSubs bool) ([]wurl, error) {
 	}
 
 	return out, nil
+}
+
+func getOtxUrls(domain string, noSubs bool) ([]wurl, error) {
+	var urls []wurl
+	page := 0
+	for {
+		r, err := http.Get(fmt.Sprintf("https://otx.alienvault.com/api/v1/indicators/hostname/%s/url_list?limit=50&page=%d", domain, page))
+		if err != nil {
+			return []wurl{}, err
+		}
+		bytes, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return []wurl{}, err
+		}
+		r.Body.Close()
+
+		wrapper := struct {
+			HasNext    bool `json:"has_next"`
+			ActualSize int  `json:"actual_size"`
+			URLList    []struct {
+				Domain   string `json:"domain"`
+				URL      string `json:"url"`
+				Hostname string `json:"hostname"`
+				Httpcode int    `json:"httpcode"`
+				PageNum  int    `json:"page_num"`
+				FullSize int    `json:"full_size"`
+				Paged    bool   `json:"paged"`
+			} `json:"url_list"`
+		}{}
+		err = json.Unmarshal(bytes, &wrapper)
+		if err != nil {
+			return []wurl{}, err
+		}
+		for _, url := range wrapper.URLList {
+			urls = append(urls, wurl{url: url.URL})
+		}
+		if !wrapper.HasNext {
+			break
+		}
+		page++
+	}
+	return urls, nil
 }
