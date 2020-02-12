@@ -23,7 +23,7 @@ var DefaultHTTPTransport = &http.Transport{
 		KeepAlive: 30 * time.Second,
 		DualStack: true,
 	}).Dial,
-	MaxIdleConns:        0,
+	MaxIdleConns:        100,
 	MaxConnsPerHost:     1000,
 	TLSHandshakeTimeout: 10 * time.Second,
 
