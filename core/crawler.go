@@ -8,7 +8,6 @@ import (
 	"github.com/gocolly/colly/v2/extensions"
 	"github.com/spf13/cobra"
 	"github.com/theblackturtle/gospider/stringset"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -35,10 +34,11 @@ var DefaultHTTPTransport = &http.Transport{
 }
 
 type Crawler struct {
-	cmd      *cobra.Command
-	C        *colly.Collector
-	Output   *Output
-	domainRe *regexp.Regexp
+	cmd                 *cobra.Command
+	C                   *colly.Collector
+	LinkFinderCollector *colly.Collector
+	Output              *Output
+	domainRe            *regexp.Regexp
 
 	subSet  *stringset.StringFilter
 	awsSet  *stringset.StringFilter
@@ -72,8 +72,6 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	// Setup http client
 	client := &http.Client{}
 
-	// Config the transport
-
 	// Set proxy
 	proxy, _ := cmd.Flags().GetString("proxy")
 	if proxy != "" {
@@ -104,6 +102,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 
 	// Set client transport
 	client.Transport = DefaultHTTPTransport
+	c.SetClient(client)
 
 	// Get headers here to overwrite if "burp" flag used
 	burpFile, _ := cmd.Flags().GetString("burp")
@@ -202,22 +201,28 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 		c.DisallowedURLFilters = append(c.DisallowedURLFilters, regexp.MustCompile(blacklists))
 	}
 
+	linkFinderCollector := c.Clone()
+
 	return &Crawler{
-		cmd:      cmd,
-		C:        c,
-		site:     site,
-		domain:   domain,
-		Output:   output,
-		domainRe: domainRe,
-		urlSet:   stringset.NewStringFilter(),
-		subSet:   stringset.NewStringFilter(),
-		jsSet:    stringset.NewStringFilter(),
-		formSet:  stringset.NewStringFilter(),
-		awsSet:   stringset.NewStringFilter(),
+		cmd:                 cmd,
+		C:                   c,
+		LinkFinderCollector: linkFinderCollector,
+		site:                site,
+		domain:              domain,
+		Output:              output,
+		domainRe:            domainRe,
+		urlSet:              stringset.NewStringFilter(),
+		subSet:              stringset.NewStringFilter(),
+		jsSet:               stringset.NewStringFilter(),
+		formSet:             stringset.NewStringFilter(),
+		awsSet:              stringset.NewStringFilter(),
 	}
 }
 
 func (crawler *Crawler) Start() {
+	// Setup Link Finder
+	crawler.setupLinkFinder()
+
 	// Handle url
 	crawler.C.OnHTML("[href]", func(e *colly.HTMLElement) {
 		urlString := e.Request.AbsoluteURL(e.Attr("href"))
@@ -283,11 +288,11 @@ func (crawler *Crawler) Start() {
 				// If JS file is minimal format. Try to find original format
 				if strings.Contains(jsFileUrl, ".min.js") {
 					originalJS := strings.ReplaceAll(jsFileUrl, ".min.js", ".js")
-					crawler.linkFinder(originalJS)
+					crawler.LinkFinderCollector.Visit(originalJS)
 				}
 
 				// Request and Get JS link
-				crawler.linkFinder(jsFileUrl)
+				crawler.LinkFinderCollector.Visit(jsFileUrl)
 			}
 		}
 	})
@@ -361,54 +366,38 @@ func (crawler *Crawler) findAWSS3(resp string) {
 
 // This function will request and parse external javascript
 // and pass to main collector with scope setup
-func (crawler *Crawler) linkFinder(jsUrl string) {
-	client := http.Client{Transport: DefaultHTTPTransport}
-	resp, err := client.Get(jsUrl)
-	if err != nil || resp.StatusCode != 200 {
-		return
-	}
-	// if the js file exists
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
+func (crawler *Crawler) setupLinkFinder() {
+	crawler.LinkFinderCollector.OnResponse(func(response *colly.Response) {
+		if response.StatusCode != 200 {
+			return
+		}
 
-	respStr := string(body)
+		respStr := string(response.Body)
 
-	crawler.findAWSS3(respStr)
-	crawler.findSubdomains(respStr)
+		crawler.findAWSS3(respStr)
+		crawler.findSubdomains(respStr)
 
-	links, err := LinkFinder(respStr)
-	if err != nil {
-		Logger.Error(err)
-		return
-	}
+		links, err := LinkFinder(respStr)
+		if err != nil {
+			Logger.Error(err)
+			return
+		}
 
-	for _, link := range links {
-		// If link is url, check with regex to make sure it in scope
-		_, err := url.Parse(link)
-		if err == nil {
-			if !crawler.domainRe.MatchString(link) {
+		for _, link := range links {
+			// If link is url, check with regex to make sure it in scope
+			newLink := FixUrl(link, crawler.site)
+			if newLink == "" {
 				continue
 			}
-		}
 
-		if strings.HasPrefix(link, "//") {
-			newLink := "https:" + link
-			if !crawler.domainRe.MatchString(newLink) {
-				continue
+			// JS Regex Result
+			outputFormat := fmt.Sprintf("[linkfinder] - [from: %s] - %s", response.Request.URL.String(), newLink)
+			fmt.Println(outputFormat)
+			if crawler.Output != nil {
+				crawler.Output.WriteToFile(outputFormat)
 			}
-			link = newLink
+			// Try to request JS path
+			_ = crawler.C.Visit(newLink)
 		}
-
-		// JS Regex Result
-		outputFormat := fmt.Sprintf("[linkfinder] - [from: %s] - %s", jsUrl, link)
-		fmt.Println(outputFormat)
-		if crawler.Output != nil {
-			crawler.Output.WriteToFile(outputFormat)
-		}
-		// Try to request JS path
-		_ = crawler.C.Visit(FixUrl(link, crawler.site))
-	}
+	})
 }

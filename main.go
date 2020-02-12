@@ -179,6 +179,7 @@ func run(cmd *cobra.Command, args []string) {
 				}
 				siteWg.Wait()
 				crawler.C.Wait()
+				crawler.LinkFinderCollector.Wait()
 			}
 		}()
 	}

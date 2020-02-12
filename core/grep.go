@@ -29,7 +29,7 @@ func GetSubdomains(source, domain string) []string {
 func GetAWSS3(source string) []string {
 	var aws []string
 	for _, match := range AWSS3.FindAllStringSubmatch(source, -1) {
-		aws = append(aws, match[0])
+		aws = append(aws, DecodeChars(match[0]))
 	}
 	return aws
 }

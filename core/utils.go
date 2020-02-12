@@ -52,7 +52,7 @@ func FixUrl(url string, site *url.URL) string {
 					newUrl = site.Scheme + "://" + site.Host + url[1:]
 				}
 			} else {
-				newUrl = site.Scheme + "://" + site.Host + url
+				newUrl = site.Scheme + "://" + site.Host + "/" + url
 			}
 		}
 	}
@@ -99,6 +99,7 @@ func CleanSubdomain(s string) string {
 	s = cleanName(s)
 	s = strings.TrimPrefix(s, "*.")
 	s = strings.TrimPrefix(s, "u002f")
+	s = strings.TrimPrefix(s, "u002F")
 	return s
 }
 
@@ -137,6 +138,7 @@ func DecodeChars(s string) string {
 	replacer := strings.NewReplacer(
 		`\u002f`, "/",
 		`\U002F`, "/",
+		`\u002F`, "/",
 		`\u0026`, "&",
 		`\U0026`, "&",
 	)
