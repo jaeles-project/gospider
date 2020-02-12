@@ -95,6 +95,12 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	noRedirect, _ := cmd.Flags().GetBool("no-redirect")
 	if noRedirect {
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			nextLocation := req.Response.Header.Get("Location")
+			Logger.Debugf("Found Redirect: %s", nextLocation)
+			// Allow in redirect from http to https
+			if strings.Contains(nextLocation, site.Hostname()) {
+				return nil
+			}
 			return http.ErrUseLastResponse
 		}
 	}
