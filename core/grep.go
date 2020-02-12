@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-const SUBRE = "(([a-zA-Z0-9]{1}|[_a-zA-Z0-9]{1}[_a-zA-Z0-9-]{0,61}[a-zA-Z0-9]{1})[.]{1})+"
+const SUBRE = `(?i)(([a-zA-Z0-9]{1}|[_a-zA-Z0-9]{1}[_a-zA-Z0-9-]{0,61}[a-zA-Z0-9]{1})[.]{1})+`
 
-var AWSS3 = regexp.MustCompile("[a-z0-9.-]+\\.s3\\.amazonaws\\.com|[a-z0-9.-]+\\.s3-[a-z0-9-]\\.amazonaws\\.com|[a-z0-9.-]+\\.s3-website[.-](eu|ap|us|ca|sa|cn)|//s3\\.amazonaws\\.com/[a-z0-9._-]+|//s3-[a-z0-9-]+\\.amazonaws\\.com/[a-z0-9._-]+")
+var AWSS3 = regexp.MustCompile(`(?i)[a-z0-9.-]+\.s3\.amazonaws\.com|[a-z0-9.-]+\.s3-[a-z0-9-]\.amazonaws\.com|[a-z0-9.-]+\.s3-website[.-](eu|ap|us|ca|sa|cn)|//s3\.amazonaws\.com/[a-z0-9._-]+|//s3-[a-z0-9-]+\.amazonaws\.com/[a-z0-9._-]+`)
 
 // SubdomainRegex returns a Regexp object initialized to match
 // subdomain names that end with the domain provided by the parameter.

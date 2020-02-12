@@ -18,6 +18,22 @@ import (
 	"time"
 )
 
+var DefaultHTTPTransport = &http.Transport{
+	Dial: (&net.Dialer{
+		Timeout:   10 * time.Second,
+		KeepAlive: 30 * time.Second,
+		DualStack: true,
+	}).Dial,
+	MaxIdleConns:        0,
+	MaxConnsPerHost:     1000,
+	TLSHandshakeTimeout: 10 * time.Second,
+
+	ExpectContinueTimeout: 4 * time.Second,
+	ResponseHeaderTimeout: 3 * time.Second,
+
+	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+}
+
 type Crawler struct {
 	cmd      *cobra.Command
 	C        *colly.Collector
@@ -54,19 +70,9 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	)
 
 	// Setup http client
-	tr := &http.Transport{
-		DialContext: (&net.Dialer{
-			Timeout:   60 * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
+	client := &http.Client{}
 
-	timeout, _ := cmd.Flags().GetInt("timeout")
-	if timeout > 0 {
-		c.SetRequestTimeout(time.Duration(timeout) * time.Second)
-	}
+	// Config the transport
 
 	// Set proxy
 	proxy, _ := cmd.Flags().GetString("proxy")
@@ -76,10 +82,28 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 		if err != nil {
 			Logger.Error("Failed to set proxy")
 		} else {
-			tr.Proxy = http.ProxyURL(pU)
+			DefaultHTTPTransport.Proxy = http.ProxyURL(pU)
 		}
 	}
-	c.WithTransport(tr)
+
+	// Set request timeout
+	timeout, _ := cmd.Flags().GetInt("timeout")
+	if timeout == 0 {
+		client.Timeout = 10 * time.Second
+	} else {
+		client.Timeout = time.Duration(timeout) * time.Second
+	}
+
+	// Disable redirect
+	noRedirect, _ := cmd.Flags().GetBool("no-redirect")
+	if noRedirect {
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+	}
+
+	// Set client transport
+	client.Transport = DefaultHTTPTransport
 
 	// Get headers here to overwrite if "burp" flag used
 	burpFile, _ := cmd.Flags().GetString("burp")
@@ -144,14 +168,6 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	// Set referer
 	extensions.Referer(c)
 
-	// Disable redirect
-	noRedirect, _ := cmd.Flags().GetBool("no-redirect")
-	if noRedirect {
-		c.SetRedirectHandler(func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		})
-	}
-
 	// Init Output
 	var output *Output
 	outputFolder, _ := cmd.Flags().GetString("output")
@@ -177,7 +193,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	}
 
 	// Set blacklist url regex
-	disallowedRegex := `.(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico)(?:\?|#|$)`
+	disallowedRegex := `(?i).(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico)(?:\?|#|$)`
 	c.DisallowedURLFilters = append(c.DisallowedURLFilters, regexp.MustCompile(disallowedRegex))
 
 	// Set optional blacklist url regex
@@ -346,7 +362,7 @@ func (crawler *Crawler) findAWSS3(resp string) {
 // This function will request and parse external javascript
 // and pass to main collector with scope setup
 func (crawler *Crawler) linkFinder(jsUrl string) {
-	client := http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}}
+	client := http.Client{Transport: DefaultHTTPTransport}
 	resp, err := client.Get(jsUrl)
 	if err != nil || resp.StatusCode != 200 {
 		return
