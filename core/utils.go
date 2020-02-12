@@ -52,6 +52,7 @@ func FixUrl(url string, site *url.URL) string {
 					newUrl = site.Scheme + "://" + site.Host + url[1:]
 				}
 			} else {
+				// "console/test.php"
 				newUrl = site.Scheme + "://" + site.Host + "/" + url
 			}
 		}

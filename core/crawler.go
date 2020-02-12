@@ -38,7 +38,6 @@ type Crawler struct {
 	C                   *colly.Collector
 	LinkFinderCollector *colly.Collector
 	Output              *Output
-	domainRe            *regexp.Regexp
 
 	subSet  *stringset.StringFilter
 	awsSet  *stringset.StringFilter
@@ -176,8 +175,9 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	}
 
 	// Set url whitelist regex
-	domainRe := regexp.MustCompile(domain)
-	c.URLFilters = append(c.URLFilters, domainRe)
+	sRegex := regexp.MustCompile(`^https?:\/\/(?:[\w\-\_]+\.)+` + domain)
+	mRegex := regexp.MustCompile(`^https?:\/\/` + domain)
+	c.URLFilters = append(c.URLFilters, sRegex, mRegex)
 
 	// Set Limit Rule
 	err := c.Limit(&colly.LimitRule{
@@ -202,6 +202,9 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	}
 
 	linkFinderCollector := c.Clone()
+	// Try to request as much as Javascript source and don't care about domain.
+	// The result of link finder will be send to Main Collector to check is it working or not.
+	linkFinderCollector.URLFilters = nil
 
 	return &Crawler{
 		cmd:                 cmd,
@@ -210,7 +213,6 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 		site:                site,
 		domain:              domain,
 		Output:              output,
-		domainRe:            domainRe,
 		urlSet:              stringset.NewStringFilter(),
 		subSet:              stringset.NewStringFilter(),
 		jsSet:               stringset.NewStringFilter(),
@@ -244,13 +246,12 @@ func (crawler *Crawler) Start() {
 		}
 		// Just print
 		if !crawler.formSet.Duplicate(formUrl) {
-			if crawler.domainRe.MatchString(formUrl) {
-				outputFormat := fmt.Sprintf("[form] - %s", formUrl)
-				fmt.Println(outputFormat)
-				if crawler.Output != nil {
-					crawler.Output.WriteToFile(outputFormat)
-				}
+			outputFormat := fmt.Sprintf("[form] - %s", formUrl)
+			fmt.Println(outputFormat)
+			if crawler.Output != nil {
+				crawler.Output.WriteToFile(outputFormat)
 			}
+
 		}
 	})
 
@@ -288,11 +289,11 @@ func (crawler *Crawler) Start() {
 				// If JS file is minimal format. Try to find original format
 				if strings.Contains(jsFileUrl, ".min.js") {
 					originalJS := strings.ReplaceAll(jsFileUrl, ".min.js", ".js")
-					crawler.LinkFinderCollector.Visit(originalJS)
+					_ = crawler.LinkFinderCollector.Visit(originalJS)
 				}
 
 				// Request and Get JS link
-				crawler.LinkFinderCollector.Visit(jsFileUrl)
+				_ = crawler.LinkFinderCollector.Visit(jsFileUrl)
 			}
 		}
 	})
@@ -377,26 +378,25 @@ func (crawler *Crawler) setupLinkFinder() {
 		crawler.findAWSS3(respStr)
 		crawler.findSubdomains(respStr)
 
-		links, err := LinkFinder(respStr)
+		paths, err := LinkFinder(respStr)
 		if err != nil {
 			Logger.Error(err)
 			return
 		}
 
-		for _, link := range links {
-			// If link is url, check with regex to make sure it in scope
-			newLink := FixUrl(link, crawler.site)
-			if newLink == "" {
-				continue
-			}
-
+		for _, path := range paths {
 			// JS Regex Result
-			outputFormat := fmt.Sprintf("[linkfinder] - [from: %s] - %s", response.Request.URL.String(), newLink)
+			outputFormat := fmt.Sprintf("[linkfinder] - [from: %s] - %s", response.Request.URL.String(), path)
 			fmt.Println(outputFormat)
 			if crawler.Output != nil {
 				crawler.Output.WriteToFile(outputFormat)
 			}
+
 			// Try to request JS path
+			newLink := FixUrl(path, crawler.site)
+			if newLink == "" {
+				continue
+			}
 			_ = crawler.C.Visit(newLink)
 		}
 	})
