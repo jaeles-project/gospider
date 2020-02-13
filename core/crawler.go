@@ -23,9 +23,9 @@ var DefaultHTTPTransport = &http.Transport{
 		KeepAlive: 30 * time.Second,
 		DualStack: true,
 	}).Dial,
-	MaxIdleConns:          100,
-	MaxConnsPerHost:       1000,
-	IdleConnTimeout:       30 * time.Second,
+	MaxIdleConns:    100,
+	MaxConnsPerHost: 1000,
+	IdleConnTimeout: 30 * time.Second,
 
 	TLSHandshakeTimeout:   10 * time.Second,
 	ExpectContinueTimeout: 1 * time.Second,
@@ -325,15 +325,16 @@ func (crawler *Crawler) Start() {
 	crawler.C.OnError(func(response *colly.Response, err error) {
 		Logger.Debugf("Error request: %s - Status code: %v - Error: %s", response.Request.URL.String(), response.StatusCode, err)
 		// Status == 0 mean "The server IP address could not be found."
-		if response.StatusCode == 404 || response.StatusCode == 429 || response.StatusCode == 0 {
+		// Status == 999 mean "IP Banned"
+		if response.StatusCode == 404 || response.StatusCode == 429 || response.StatusCode == 0 || response.StatusCode == 999 {
 			return
 		}
 
 		// Retry if status code == 999
-		if response.StatusCode == 999 {
-			_ = response.Request.Retry()
-			return
-		}
+		//if response.StatusCode == 999 {
+		//	_ = response.Request.Retry()
+		//	return
+		//}
 
 		u := response.Request.URL.String()
 		outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
