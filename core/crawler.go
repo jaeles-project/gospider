@@ -23,14 +23,15 @@ var DefaultHTTPTransport = &http.Transport{
 		KeepAlive: 30 * time.Second,
 		DualStack: true,
 	}).Dial,
-	MaxIdleConns:        100,
-	MaxConnsPerHost:     1000,
-	TLSHandshakeTimeout: 10 * time.Second,
+	MaxIdleConns:          100,
+	MaxConnsPerHost:       1000,
+	IdleConnTimeout:       30 * time.Second,
 
-	ExpectContinueTimeout: 4 * time.Second,
+	TLSHandshakeTimeout:   10 * time.Second,
+	ExpectContinueTimeout: 1 * time.Second,
 	ResponseHeaderTimeout: 3 * time.Second,
-
-	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	DisableCompression:    true,
+	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 }
 
 type Crawler struct {
@@ -74,7 +75,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	// Set proxy
 	proxy, _ := cmd.Flags().GetString("proxy")
 	if proxy != "" {
-		Logger.Debugf("Proxy: %s", proxy)
+		Logger.Info("Proxy: %s", proxy)
 		pU, err := url.Parse(proxy)
 		if err != nil {
 			Logger.Error("Failed to set proxy")
@@ -86,6 +87,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	// Set request timeout
 	timeout, _ := cmd.Flags().GetInt("timeout")
 	if timeout == 0 {
+		Logger.Info("Your input timeout is 0. Gospider will set it to 10 seconds")
 		client.Timeout = 10 * time.Second
 	} else {
 		client.Timeout = time.Duration(timeout) * time.Second
@@ -99,6 +101,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 			Logger.Debugf("Found Redirect: %s", nextLocation)
 			// Allow in redirect from http to https
 			if strings.Contains(nextLocation, site.Hostname()) {
+				Logger.Infof("Redirecting to: %s", nextLocation)
 				return nil
 			}
 			return http.ErrUseLastResponse
