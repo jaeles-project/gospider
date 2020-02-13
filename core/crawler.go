@@ -324,9 +324,15 @@ func (crawler *Crawler) Start() {
 
 	crawler.C.OnError(func(response *colly.Response, err error) {
 		Logger.Debugf("Error request: %s - Status code: %v - Error: %s", response.Request.URL.String(), response.StatusCode, err)
-		// Status == 0 mean "The server IP address could not be found."
-		// Status == 999 mean "IP Banned"
-		if response.StatusCode == 404 || response.StatusCode == 429 || response.StatusCode == 0 || response.StatusCode == 999 {
+		/*
+		1xx Informational
+		2xx Success
+		3xx Redirection
+		4xx Client Error
+		5xx Server Error
+		*/
+
+		if response.StatusCode == 404 || response.StatusCode == 429 || response.StatusCode < 100 || response.StatusCode >= 500 {
 			return
 		}
 
@@ -335,7 +341,6 @@ func (crawler *Crawler) Start() {
 		//	_ = response.Request.Retry()
 		//	return
 		//}
-
 		u := response.Request.URL.String()
 		outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
 		fmt.Println(outputFormat)
