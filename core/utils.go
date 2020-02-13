@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var nameStripRE = regexp.MustCompile("^((20)|(25)|(2b)|(2f)|(3d)|(3a)|(40))+")
+var nameStripRE = regexp.MustCompile("(?i)^((20)|(25)|(2b)|(2f)|(3d)|(3a)|(40))+")
 
 func GetRawCookie(cookies []*http.Cookie) string {
 	var rawCookies []string
