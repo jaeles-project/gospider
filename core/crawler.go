@@ -325,22 +325,17 @@ func (crawler *Crawler) Start() {
 	crawler.C.OnError(func(response *colly.Response, err error) {
 		Logger.Debugf("Error request: %s - Status code: %v - Error: %s", response.Request.URL.String(), response.StatusCode, err)
 		/*
-		1xx Informational
-		2xx Success
-		3xx Redirection
-		4xx Client Error
-		5xx Server Error
+			1xx Informational
+			2xx Success
+			3xx Redirection
+			4xx Client Error
+			5xx Server Error
 		*/
 
 		if response.StatusCode == 404 || response.StatusCode == 429 || response.StatusCode < 100 || response.StatusCode >= 500 {
 			return
 		}
 
-		// Retry if status code == 999
-		//if response.StatusCode == 999 {
-		//	_ = response.Request.Retry()
-		//	return
-		//}
 		u := response.Request.URL.String()
 		outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
 		fmt.Println(outputFormat)
@@ -399,6 +394,10 @@ func (crawler *Crawler) setupLinkFinder() {
 			return
 		}
 
+		var inScope bool
+		if InScope(response.Request.URL, crawler.C.URLFilters) {
+			inScope = true
+		}
 		for _, path := range paths {
 			// JS Regex Result
 			outputFormat := fmt.Sprintf("[linkfinder] - [from: %s] - %s", response.Request.URL.String(), path)
@@ -408,11 +407,19 @@ func (crawler *Crawler) setupLinkFinder() {
 			}
 
 			// Try to request JS path
-			newLink := FixUrl(path, crawler.site)
-			if newLink == "" {
-				continue
+			// Try to generate URLs with main site
+			urlWithMainSite := FixUrl(path, crawler.site)
+			if urlWithMainSite != "" {
+				_ = crawler.C.Visit(urlWithMainSite)
 			}
-			_ = crawler.C.Visit(newLink)
+
+			// Try to generate URLs with the site where Javascript file host in (must be in main/sub domain)
+			if inScope {
+				urlWithJSHostIn := FixUrl(path, response.Request.URL)
+				if urlWithJSHostIn != "" {
+					_ = crawler.C.Visit(urlWithJSHostIn)
+				}
+			}
 		}
 	})
 }

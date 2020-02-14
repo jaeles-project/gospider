@@ -57,7 +57,6 @@ func FixUrl(url string, site *url.URL) string {
 			}
 		}
 	}
-	//Logger.Debugf("[Fix url] old: %s - new: %s", url, newUrl)
 	return newUrl
 }
 
@@ -145,4 +144,13 @@ func DecodeChars(s string) string {
 	)
 	s = replacer.Replace(s)
 	return s
+}
+
+func InScope(u *url.URL, regexps []*regexp.Regexp) bool {
+	for _, r := range regexps {
+		if r.MatchString(u.Hostname()) {
+			return true
+		}
+	}
+	return false
 }
