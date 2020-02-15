@@ -43,6 +43,7 @@ func main() {
 	commands.Flags().BoolP("robots", "", true, "Try to crawl robots.txt")
 	commands.Flags().BoolP("other-source", "a", false, "Find URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com)")
 	commands.Flags().BoolP("include-subs", "w", false, "Include subdomains crawled from 3rd party. Default is main domain")
+	commands.Flags().BoolP("print-other-source", "r", false, "Print other-source's urls")
 
 	commands.Flags().BoolP("debug", "", false, "Turn on debug mode")
 	commands.Flags().BoolP("verbose", "v", false, "Turn on verbose")
@@ -123,6 +124,7 @@ func run(cmd *cobra.Command, args []string) {
 	robots, _ := cmd.Flags().GetBool("robots")
 	otherSource, _ := cmd.Flags().GetBool("other-source")
 	includeSubs, _ := cmd.Flags().GetBool("include-subs")
+	printOtherSourceResult, _ := cmd.Flags().GetBool("print-other-source")
 
 	var wg sync.WaitGroup
 	inputChan := make(chan string, threads)
@@ -169,7 +171,9 @@ func run(cmd *cobra.Command, args []string) {
 								continue
 							}
 							outputFormat := fmt.Sprintf("[other-sources] - %s", url)
-							fmt.Println(outputFormat)
+							if printOtherSourceResult {
+								fmt.Println(outputFormat)
+							}
 							if crawler.Output != nil {
 								crawler.Output.WriteToFile(outputFormat)
 							}
