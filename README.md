@@ -3,7 +3,7 @@
  
 ## Installation
 ```
-go get -u github.com/theblackturtle/gospider
+go get -u github.com/jaeles-project/gospider
 ```
 
 ## Features

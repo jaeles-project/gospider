@@ -200,7 +200,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 		os.Exit(1)
 	}
 
-	// Set blacklist url regex
+	// GoSpider default disallowed  regex
 	disallowedRegex := `(?i).(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico)(?:\?|#|$)`
 	c.DisallowedURLFilters = append(c.DisallowedURLFilters, regexp.MustCompile(disallowedRegex))
 
@@ -212,7 +212,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 
 	linkFinderCollector := c.Clone()
 	// Try to request as much as Javascript source and don't care about domain.
-	// The result of link finder will be send to Main Collector to check is it working or not.
+	// The result of link finder will be send to Link Finder Collector to check is it working or not.
 	linkFinderCollector.URLFilters = nil
 
 	return &Crawler{
@@ -248,12 +248,7 @@ func (crawler *Crawler) Start() {
 
 	// Handle form
 	crawler.C.OnHTML("form[action]", func(e *colly.HTMLElement) {
-		formUrl := e.Request.AbsoluteURL(e.Attr("action"))
-		formUrl = FixUrl(formUrl, crawler.site)
-		if formUrl == "" {
-			return
-		}
-		// Just print
+		formUrl := e.Request.URL.String()
 		if !crawler.formSet.Duplicate(formUrl) {
 			outputFormat := fmt.Sprintf("[form] - %s", formUrl)
 			fmt.Println(outputFormat)
@@ -301,7 +296,7 @@ func (crawler *Crawler) Start() {
 					_ = crawler.LinkFinderCollector.Visit(originalJS)
 				}
 
-				// Request and Get JS link
+				// Send Javascript to Link Finder Collector
 				_ = crawler.LinkFinderCollector.Visit(jsFileUrl)
 			}
 		}
@@ -313,7 +308,7 @@ func (crawler *Crawler) Start() {
 		crawler.findSubdomains(respStr)
 		crawler.findAWSS3(respStr)
 
-		// Verify which links are working
+		// Verify which link is working
 		u := response.Request.URL.String()
 		outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
 		fmt.Println(outputFormat)
@@ -375,8 +370,7 @@ func (crawler *Crawler) findAWSS3(resp string) {
 	}
 }
 
-// This function will request and parse external javascript
-// and pass to main collector with scope setup
+// Setup link finder
 func (crawler *Crawler) setupLinkFinder() {
 	crawler.LinkFinderCollector.OnResponse(func(response *colly.Response) {
 		if response.StatusCode != 200 {
@@ -413,7 +407,7 @@ func (crawler *Crawler) setupLinkFinder() {
 				_ = crawler.C.Visit(urlWithMainSite)
 			}
 
-			// Try to generate URLs with the site where Javascript file host in (must be in main/sub domain)
+			// Try to generate URLs with the site where Javascript file host in (must be in main or sub domain)
 			if inScope {
 				urlWithJSHostIn := FixUrl(path, response.Request.URL)
 				if urlWithJSHostIn != "" {

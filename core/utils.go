@@ -96,18 +96,16 @@ func GetExtType(rawUrl string) string {
 }
 
 func CleanSubdomain(s string) string {
-	s = cleanName(s)
+	s = strings.TrimSpace(strings.ToLower(s))
 	s = strings.TrimPrefix(s, "*.")
-	s = strings.TrimPrefix(s, "u002f")
-	s = strings.TrimPrefix(s, "u002F")
+	//s = strings.Trim("u00","")
+	s = cleanName(s)
 	return s
 }
 
 // Clean up the names scraped from the web.
 // Get from Amass
 func cleanName(name string) string {
-	name = strings.TrimSpace(strings.ToLower(name))
-
 	for {
 		if i := nameStripRE.FindStringIndex(name); i != nil {
 			name = name[i[1]:]
