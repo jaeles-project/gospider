@@ -1,5 +1,5 @@
-# gospider
-**gospider** is a simple spider written in Go.
+# GoSpider
+**GoSpider** - Fast web spider written in Go
  
 ## Installation
 ```
@@ -19,6 +19,9 @@ go get -u github.com/jaeles-project/gospider
 * Support Burp input
 * Crawl multiple sites in parallel
 * Random mobile/web User-Agent
+
+## Showcases
+[![asciicast](https://asciinema.org/a/301827.svg)](https://asciinema.org/a/301827)
 
 ## Usage
 ```
@@ -96,6 +99,3 @@ gospider -s "https://google.com/" -o output -c 10 -d 1 --other-source --burp bur
 ```
 gospider -s "https://google.com/" -o output -c 10 -d 1 --blacklist ".(woff|pdf)"
 ```
-
-## Showcases
-[![asciicast](https://asciinema.org/a/301827.svg)](https://asciinema.org/a/301827)
