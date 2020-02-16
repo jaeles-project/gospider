@@ -17,7 +17,7 @@ import (
 
 var commands = &cobra.Command{
 	Use:  core.CLIName,
-	Long: fmt.Sprintf("A Simple Web Spider - %v by %v", core.VERSION, core.AUTHOR),
+	Long: fmt.Sprintf("Fast web spider written in Go - %v by %v", core.VERSION, core.AUTHOR),
 	Run:  run,
 }
 
@@ -41,7 +41,7 @@ func main() {
 
 	commands.Flags().BoolP("sitemap", "", false, "Try to crawl sitemap.xml")
 	commands.Flags().BoolP("robots", "", true, "Try to crawl robots.txt")
-	commands.Flags().BoolP("other-source", "a", false, "Find URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com)")
+	commands.Flags().BoolP("other-source", "a", false, "Find URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com, AlienVault.com)")
 	commands.Flags().BoolP("include-subs", "w", false, "Include subdomains crawled from 3rd party. Default is main domain")
 	commands.Flags().BoolP("include-other-source", "r", false, "Also include other-source's urls (still crawl and request)")
 

@@ -25,7 +25,7 @@ go get -u github.com/jaeles-project/gospider
 
 ## Usage
 ```
-A Simple Web Spider - v1.1.0 by @theblackturtle
+Fast web spider written in Go - v1.1.0 by @theblackturtle
 
 Usage:
   gospider [flags]
