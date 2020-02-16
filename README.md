@@ -22,7 +22,7 @@ go get -u github.com/jaeles-project/gospider
 
 ## Usage
 ```
-A Simple Web Spider - v1.1.1 by @theblackturtle
+A Simple Web Spider - v1.1.0 by @theblackturtle
 
 Usage:
   gospider [flags]
