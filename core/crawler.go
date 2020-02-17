@@ -18,16 +18,15 @@ import (
 )
 
 var DefaultHTTPTransport = &http.Transport{
-	Dial: (&net.Dialer{
+	DialContext: (&net.Dialer{
 		Timeout:   10 * time.Second,
+		// Default is 15 seconds
 		KeepAlive: 30 * time.Second,
-		DualStack: true,
-	}).Dial,
+	}).DialContext,
 	MaxIdleConns:    100,
 	MaxConnsPerHost: 1000,
 	IdleConnTimeout: 30 * time.Second,
 
-	TLSHandshakeTimeout:   10 * time.Second,
 	ExpectContinueTimeout: 1 * time.Second,
 	ResponseHeaderTimeout: 3 * time.Second,
 	DisableCompression:    true,
@@ -99,7 +98,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			nextLocation := req.Response.Header.Get("Location")
 			Logger.Debugf("Found Redirect: %s", nextLocation)
-			// Allow in redirect from http to https
+			// Allow in redirect from http to https or in same hostname
 			if strings.Contains(nextLocation, site.Hostname()) {
 				Logger.Infof("Redirecting to: %s", nextLocation)
 				return nil
