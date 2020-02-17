@@ -1,4 +1,4 @@
-module github.com/theblackturtle/gospider
+module github.com/jaeles-project/gospider
 
 go 1.13
 

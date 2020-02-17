@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/colly/v2/extensions"
+	"github.com/jaeles-project/gospider/stringset"
 	"github.com/spf13/cobra"
-	"github.com/theblackturtle/gospider/stringset"
 	"net"
 	"net/http"
 	"net/url"
@@ -19,7 +19,7 @@ import (
 
 var DefaultHTTPTransport = &http.Transport{
 	DialContext: (&net.Dialer{
-		Timeout:   10 * time.Second,
+		Timeout: 10 * time.Second,
 		// Default is 15 seconds
 		KeepAlive: 30 * time.Second,
 	}).DialContext,
@@ -99,6 +99,8 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 			nextLocation := req.Response.Header.Get("Location")
 			Logger.Debugf("Found Redirect: %s", nextLocation)
 			// Allow in redirect from http to https or in same hostname
+			// We just check contain hostname or not because we set URLFilter in main collector so if
+			// the URL is https://otherdomain.com/?url=maindomain.com, it will reject it
 			if strings.Contains(nextLocation, site.Hostname()) {
 				Logger.Infof("Redirecting to: %s", nextLocation)
 				return nil

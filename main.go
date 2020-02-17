@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/theblackturtle/gospider/core"
+	"github.com/jaeles-project/gospider/core"
 	"io/ioutil"
 	"net/url"
 
