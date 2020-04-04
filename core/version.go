@@ -2,6 +2,6 @@ package core
 
 const (
 	CLIName = "gospider"
-	AUTHOR  = "@theblackturtle"
+	AUTHOR  = "@thebl4ckturtle"
 	VERSION = "v1.1.0"
 )

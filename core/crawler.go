@@ -30,7 +30,7 @@ var DefaultHTTPTransport = &http.Transport{
 	ExpectContinueTimeout: 1 * time.Second,
 	ResponseHeaderTimeout: 3 * time.Second,
 	DisableCompression:    true,
-	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true, Renegotiation: tls.RenegotiateOnceAsClient},
 }
 
 type Crawler struct {
@@ -185,9 +185,8 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	}
 
 	// Set url whitelist regex
-	sRegex := regexp.MustCompile(`^https?:\/\/(?:[\w\-\_]+\.)+` + domain)
-	mRegex := regexp.MustCompile(`^https?:\/\/` + domain)
-	c.URLFilters = append(c.URLFilters, sRegex, mRegex)
+	sRegex := regexp.MustCompile(`^(http|ws)s?:\/\/([A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?)(.|\s)+` + domain)
+	c.URLFilters = append(c.URLFilters, sRegex)
 
 	// Set Limit Rule
 	err := c.Limit(&colly.LimitRule{
@@ -202,7 +201,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	}
 
 	// GoSpider default disallowed  regex
-	disallowedRegex := `(?i).(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico)(?:\?|#|$)`
+	disallowedRegex := `(?i).(png|apng|bmp|gif|ico|cur|jpg|jpeg|jfif|pjp|pjpeg|svg|tif|tiff|webp|xbm|3gp|aac|flac|mpg|mpeg|mp3|mp4|m4a|m4v|m4p|oga|ogg|ogv|mov|wav|webm|eot|woff|woff2|ttf|otf|css)(?:\?|#|$)`
 	c.DisallowedURLFilters = append(c.DisallowedURLFilters, regexp.MustCompile(disallowedRegex))
 
 	// Set optional blacklist url regex

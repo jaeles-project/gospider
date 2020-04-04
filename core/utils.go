@@ -135,12 +135,9 @@ func DecodeChars(s string) string {
 	// In case json encoded chars
 	replacer := strings.NewReplacer(
 		`\u002f`, "/",
-		`\U002F`, "/",
-		`\u002F`, "/",
 		`\u0026`, "&",
-		`\U0026`, "&",
 	)
-	s = replacer.Replace(s)
+	s = replacer.Replace(strings.ToLower(s))
 	return s
 }
 
