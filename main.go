@@ -39,6 +39,8 @@ func main() {
     commands.Flags().IntP("random-delay", "K", 0, "RandomDelay is the extra randomized duration to wait added to Delay before creating a new request (second)")
     commands.Flags().IntP("timeout", "m", 10, "Request timeout (second)")
 
+    commands.Flags().BoolP("base", "B", false, "Disable all and only use HTML content")
+    commands.Flags().BoolP("js", "", true, "Enable linkfinder in javascript file")
     commands.Flags().BoolP("sitemap", "", false, "Try to crawl sitemap.xml")
     commands.Flags().BoolP("robots", "", true, "Try to crawl robots.txt")
     commands.Flags().BoolP("other-source", "a", false, "Find URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com, AlienVault.com)")
@@ -121,10 +123,20 @@ func run(cmd *cobra.Command, args []string) {
 
     threads, _ := cmd.Flags().GetInt("threads")
     sitemap, _ := cmd.Flags().GetBool("sitemap")
+    linkfinder, _ := cmd.Flags().GetBool("js")
     robots, _ := cmd.Flags().GetBool("robots")
     otherSource, _ := cmd.Flags().GetBool("other-source")
     includeSubs, _ := cmd.Flags().GetBool("include-subs")
     includeOtherSourceResult, _ := cmd.Flags().GetBool("include-other-source")
+    // disable all options above
+    base, _ := cmd.Flags().GetBool("base")
+    if base {
+        linkfinder = false
+        robots = false
+        otherSource = false
+        includeSubs = false
+        includeOtherSourceResult = false
+    }
 
     var wg sync.WaitGroup
     inputChan := make(chan string, threads)
@@ -145,7 +157,7 @@ func run(cmd *cobra.Command, args []string) {
                 siteWg.Add(1)
                 go func() {
 					defer siteWg.Done()
-					crawler.Start()
+					crawler.Start(linkfinder)
 				}()
                 // Brute force Sitemap path
                 if sitemap {

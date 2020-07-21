@@ -230,9 +230,11 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
     }
 }
 
-func (crawler *Crawler) Start() {
+func (crawler *Crawler) Start(linkfinder bool) {
     // Setup Link Finder
-    crawler.setupLinkFinder()
+    if linkfinder {
+        crawler.setupLinkFinder()
+    }
 
     // Handle url
     crawler.C.OnHTML("[href]", func(e *colly.HTMLElement) {
