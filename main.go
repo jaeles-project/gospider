@@ -66,8 +66,6 @@ func run(cmd *cobra.Command, args []string) {
 		Examples()
 		os.Exit(1)
 	}
-
-	fmt.Fprint(os.Stderr, fmt.Sprintf("Fast web spider written in Go - %v by %v", core.VERSION, core.AUTHOR))
 	version, _ := cmd.Flags().GetBool("version")
 	if version {
 		fmt.Printf("Version: %s\n", core.VERSION)
