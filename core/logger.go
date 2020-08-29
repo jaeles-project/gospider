@@ -2,16 +2,21 @@ package core
 
 import (
 	"github.com/sirupsen/logrus"
+	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 	"os"
 )
 
 var Logger *logrus.Logger
 
 func init() {
-	Logger = logrus.New()
-	Logger.SetFormatter(&logrus.TextFormatter{
-		ForceColors:      true,
-		DisableTimestamp: true,
-	})
-	Logger.SetOutput(os.Stdout)
+	logger := logrus.New()
+	logger = &logrus.Logger{
+		Out:   os.Stderr,
+		Level: logrus.InfoLevel,
+		Formatter: &prefixed.TextFormatter{
+			ForceColors:     true,
+			ForceFormatting: true,
+		},
+	}
+	Logger = logger
 }

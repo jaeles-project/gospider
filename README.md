@@ -1,12 +1,15 @@
 # GoSpider
+
 **GoSpider** - Fast web spider written in Go
- 
+
 ## Installation
+
 ```
 go get -u github.com/jaeles-project/gospider
 ```
 
 ## Features
+
 * Fast web crawling
 * Brute force and parse sitemap.xml
 * Parse robots.txt
@@ -24,8 +27,9 @@ go get -u github.com/jaeles-project/gospider
 [![asciicast](https://asciinema.org/a/301827.svg)](https://asciinema.org/a/301827)
 
 ## Usage
-```
-Fast web spider written in Go - v1.1.0 by @thebl4ckturtle
+
+```shell
+Fast web spider written in Go - v1.1.2 by @thebl4ckturtle & @j3ssiejjj
 
 Usage:
   gospider [flags]
@@ -36,9 +40,9 @@ Flags:
   -p, --proxy string           Proxy (Ex: http://127.0.0.1:8080)
   -o, --output string          Output folder
   -u, --user-agent string      User Agent to use
-                                web: random web user-agent
-                                mobi: random mobile user-agent
-                                or you can set your special user-agent (default "web")
+                               	web: random web user-agent
+                               	mobi: random mobile user-agent
+                               	or you can set your special user-agent (default "web")
       --cookie string          Cookie to use (testA=a; testB=b)
   -H, --header stringArray     Header to use (Use multiple flag to set multiple header)
       --burp string            Load headers and cookie from burp raw http request
@@ -49,20 +53,32 @@ Flags:
   -k, --delay int              Delay is the duration to wait before creating a new request to the matching domains (second)
   -K, --random-delay int       RandomDelay is the extra randomized duration to wait added to Delay before creating a new request (second)
   -m, --timeout int            Request timeout (second) (default 10)
+  -B, --base                   Disable all and only use HTML content
+      --js                     Enable linkfinder in javascript file (default true)
       --sitemap                Try to crawl sitemap.xml
       --robots                 Try to crawl robots.txt (default true)
-  -a, --other-source           Find URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com)
+  -a, --other-source           Find URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com, AlienVault.com)
   -w, --include-subs           Include subdomains crawled from 3rd party. Default is main domain
   -r, --include-other-source   Also include other-source's urls (still crawl and request)
       --debug                  Turn on debug mode
   -v, --verbose                Turn on verbose
+  -q, --quite                  Only show URL
       --no-redirect            Disable redirect
       --version                Check version
   -h, --help                   help for gospider
 ```
 
 ## Example commands
+
+### Quite output
+
+```
+gospider -q -s "https://google.com/"
+```
+
+
 #### Run with single site
+
 ```
 gospider -s "https://google.com/" -o output -c 10 -d 1
 ```
@@ -99,3 +115,11 @@ gospider -s "https://google.com/" -o output -c 10 -d 1 --other-source --burp bur
 ```
 gospider -s "https://google.com/" -o output -c 10 -d 1 --blacklist ".(woff|pdf)"
 ```
+
+## License
+
+`Gospider` is made with ♥  by [@j3ssiejjj](https://twitter.com/j3ssiejjj) & [@thebl4ckturtle](https://twitter.com/thebl4ckturtle) and it is released under the MIT license.
+
+## Donation
+
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/j3ssiejjj)
