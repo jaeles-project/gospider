@@ -4,10 +4,6 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
-	"github.com/gocolly/colly/v2"
-	"github.com/gocolly/colly/v2/extensions"
-	"github.com/jaeles-project/gospider/stringset"
-	"github.com/spf13/cobra"
 	"net"
 	"net/http"
 	"net/url"
@@ -15,6 +11,11 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/gocolly/colly/v2"
+	"github.com/gocolly/colly/v2/extensions"
+	"github.com/jaeles-project/gospider/stringset"
+	"github.com/spf13/cobra"
 )
 
 var DefaultHTTPTransport = &http.Transport{
