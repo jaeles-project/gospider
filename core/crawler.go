@@ -190,7 +190,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 
     // Set Limit Rule
     err := c.Limit(&colly.LimitRule{
-        DomainGlob:  domain,
+        DomainGlob:  "*",
         Parallelism: concurrent,
         Delay:       time.Duration(delay) * time.Second,
         RandomDelay: time.Duration(randomDelay) * time.Second,
