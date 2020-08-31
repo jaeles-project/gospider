@@ -49,7 +49,7 @@ func main() {
 
 	commands.Flags().BoolP("debug", "", false, "Turn on debug mode")
 	commands.Flags().BoolP("verbose", "v", false, "Turn on verbose")
-	commands.Flags().BoolP("quite", "q", false, "Only show URL")
+	commands.Flags().BoolP("quiet", "q", false, "Suppress all the output and only show URL")
 	commands.Flags().BoolP("no-redirect", "", false, "Disable redirect")
 	commands.Flags().BoolP("version", "", false, "Check version")
 

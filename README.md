@@ -62,10 +62,11 @@ Flags:
   -r, --include-other-source   Also include other-source's urls (still crawl and request)
       --debug                  Turn on debug mode
   -v, --verbose                Turn on verbose
-  -q, --quite                  Only show URL
+  -q, --quiet                  Suppress all the output and only show URL
       --no-redirect            Disable redirect
       --version                Check version
   -h, --help                   help for gospider
+
 ```
 
 ## Example commands
