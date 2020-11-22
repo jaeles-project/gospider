@@ -137,7 +137,7 @@ func DecodeChars(s string) string {
 		`\u002f`, "/",
 		`\u0026`, "&",
 	)
-	s = replacer.Replace(strings.ToLower(s))
+	s = replacer.Replace(s)
 	return s
 }
 
