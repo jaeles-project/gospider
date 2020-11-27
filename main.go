@@ -60,15 +60,11 @@ func main() {
 	}
 }
 
-func run(cmd *cobra.Command, args []string) {
-	if cmd.Flags().NFlag() == 0 {
-		cmd.HelpFunc()(cmd, args)
-		Examples()
-		os.Exit(1)
-	}
+func run(cmd *cobra.Command, _ []string) {
 	version, _ := cmd.Flags().GetBool("version")
 	if version {
 		fmt.Printf("Version: %s\n", core.VERSION)
+		Examples()
 		os.Exit(0)
 	}
 
@@ -99,20 +95,22 @@ func run(cmd *cobra.Command, args []string) {
 		siteList = append(siteList, siteInput)
 	}
 	sitesListInput, _ := cmd.Flags().GetString("sites")
-	// parse from stdin
 	if sitesListInput != "" {
-		sitesFile, err := os.Open(sitesListInput)
-		if err != nil {
-			core.Logger.Error(err)
-			os.Exit(1)
+		// parse from stdin
+		sitesFile := core.ReadingLines(sitesListInput)
+		if len(sitesFile) > 0 {
+			siteList = append(siteList, sitesFile...)
 		}
-		defer sitesFile.Close()
+	}
 
-		sc := bufio.NewScanner(sitesFile)
+	stat, _ := os.Stdin.Stat()
+	// detect if anything came from std
+	if (stat.Mode() & os.ModeCharDevice) == 0 {
+		sc := bufio.NewScanner(os.Stdin)
 		for sc.Scan() {
-			line := strings.TrimSpace(sc.Text())
-			if err := sc.Err(); err == nil && line != "" {
-				siteList = append(siteList, line)
+			target := strings.TrimSpace(sc.Text())
+			if err := sc.Err(); err == nil && target != "" {
+				siteList = append(siteList, target)
 			}
 		}
 	}
@@ -218,5 +216,6 @@ func Examples() {
 	h += `gospider -q -s "https://target.com/"` + "\n"
 	h += `gospider -s "https://target.com/" -o output -c 10 -d 1` + "\n"
 	h += `gospider -s "https://target.com/" -o output -c 10 -d 1 --other-source` + "\n"
+	h += `echo 'http://target.com | gospider -o output -c 10 -d 1 --other-source` + "\n"
 	fmt.Println(h)
 }

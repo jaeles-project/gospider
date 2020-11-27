@@ -1,10 +1,13 @@
 package core
 
 import (
+	"bufio"
 	"fmt"
+	"github.com/mitchellh/go-homedir"
 	"golang.org/x/net/publicsuffix"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -148,4 +151,39 @@ func InScope(u *url.URL, regexps []*regexp.Regexp) bool {
 		}
 	}
 	return false
+}
+
+// NormalizePath the path
+func NormalizePath(path string) string {
+	if strings.HasPrefix(path, "~") {
+		path, _ = homedir.Expand(path)
+	}
+	return path
+}
+
+// ReadingLines Reading file and return content as []string
+func ReadingLines(filename string) []string {
+	var result []string
+	if strings.HasPrefix(filename, "~") {
+		filename, _ = homedir.Expand(filename)
+	}
+	file, err := os.Open(filename)
+	if err != nil {
+		return result
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		val := strings.TrimSpace(scanner.Text())
+		if val == "" {
+			continue
+		}
+		result = append(result, val)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return result
+	}
+	return result
 }
