@@ -2,6 +2,16 @@
 
 **GoSpider** - Fast web spider written in Go
 
+
+## Painless integrate Gospider into your recon workflow?
+
+<p align="center">
+  <img alt="huntersuite" src="https://user-images.githubusercontent.com/23289085/101143253-35ea6b80-3649-11eb-9130-d1fc306c9a76.png" height="200" />
+  <p align="center">
+Enjoying this tool? Support it's development and take your game to the next level by using <a href="https://huntersuite.io">HunterSuite.io</a>
+  </p>
+</p>
+
 ## Installation
 
 ```
