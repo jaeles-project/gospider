@@ -48,7 +48,7 @@ type Crawler struct {
 
     site   *url.URL
     domain string
-    quite  bool
+    quiet  bool
 }
 
 func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
@@ -59,7 +59,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
     }
     Logger.Infof("Start crawling: %s", site)
 
-    quite, _ := cmd.Flags().GetBool("quite")
+    quiet, _ := cmd.Flags().GetBool("quiet")
     maxDepth, _ := cmd.Flags().GetInt("depth")
     concurrent, _ := cmd.Flags().GetInt("concurrent")
     delay, _ := cmd.Flags().GetInt("delay")
@@ -241,7 +241,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
         C:                   c,
         LinkFinderCollector: linkFinderCollector,
         site:                site,
-        quite:               quite,
+        quiet:               quiet,
         domain:              domain,
         Output:              output,
         urlSet:              stringset.NewStringFilter(),
@@ -275,10 +275,9 @@ func (crawler *Crawler) Start(linkfinder bool) {
         formUrl := e.Request.URL.String()
         if !crawler.formSet.Duplicate(formUrl) {
             outputFormat := fmt.Sprintf("[form] - %s", formUrl)
-            if crawler.quite {
-                outputFormat = formUrl
+            if !crawler.quiet {
+                fmt.Println(outputFormat)
             }
-            fmt.Println(outputFormat)
             if crawler.Output != nil {
                 crawler.Output.WriteToFile(outputFormat)
             }
@@ -292,10 +291,9 @@ func (crawler *Crawler) Start(linkfinder bool) {
         uploadUrl := e.Request.URL.String()
         if !uploadFormSet.Duplicate(uploadUrl) {
             outputFormat := fmt.Sprintf("[upload-form] - %s", uploadUrl)
-            if crawler.quite {
-                outputFormat = uploadUrl
+            if !crawler.quiet {
+                fmt.Println(outputFormat)
             }
-            fmt.Println(outputFormat)
             if crawler.Output != nil {
                 crawler.Output.WriteToFile(outputFormat)
             }
@@ -315,10 +313,9 @@ func (crawler *Crawler) Start(linkfinder bool) {
         if fileExt == ".js" || fileExt == ".xml" || fileExt == ".json" {
             if !crawler.jsSet.Duplicate(jsFileUrl) {
                 outputFormat := fmt.Sprintf("[javascript] - %s", jsFileUrl)
-                if crawler.quite {
-                    outputFormat = jsFileUrl
+                if !crawler.quiet {
+                    fmt.Println(outputFormat)
                 }
-                fmt.Println(outputFormat)
                 if crawler.Output != nil {
                     crawler.Output.WriteToFile(outputFormat)
                 }
@@ -345,10 +342,11 @@ func (crawler *Crawler) Start(linkfinder bool) {
         u := response.Request.URL.String()
 
         outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
-        if crawler.quite {
-            outputFormat = u
+        if !crawler.quiet {
+            fmt.Println(outputFormat)
+        } else {
+            fmt.Println(u)
         }
-        fmt.Println(outputFormat)
         if crawler.Output != nil {
             crawler.Output.WriteToFile(outputFormat)
         }
@@ -369,10 +367,11 @@ func (crawler *Crawler) Start(linkfinder bool) {
 
         u := response.Request.URL.String()
         outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
-        if crawler.quite {
-            outputFormat = u
+        if !crawler.quiet {
+            fmt.Println(outputFormat)
+        } else {
+            fmt.Println(u)
         }
-        fmt.Println(outputFormat)
         if crawler.Output != nil {
             crawler.Output.WriteToFile(outputFormat)
         }
@@ -390,12 +389,10 @@ func (crawler *Crawler) findSubdomains(resp string) {
     for _, sub := range subs {
         if !crawler.subSet.Duplicate(sub) {
             outputFormat := fmt.Sprintf("[subdomains] - %s", sub)
-            if crawler.quite {
+            if !crawler.quiet {
                 outputFormat = fmt.Sprintf("http://%s", sub)
                 fmt.Println(outputFormat)
                 outputFormat = fmt.Sprintf("https://%s", sub)
-                fmt.Println(outputFormat)
-            } else {
                 fmt.Println(outputFormat)
             }
             if crawler.Output != nil {
@@ -411,10 +408,9 @@ func (crawler *Crawler) findAWSS3(resp string) {
     for _, e := range aws {
         if !crawler.awsSet.Duplicate(e) {
             outputFormat := fmt.Sprintf("[aws-s3] - %s", e)
-            if crawler.quite {
-                outputFormat = e
+            if !crawler.quiet {
+                fmt.Println(outputFormat)
             }
-            fmt.Println(outputFormat)
             if crawler.Output != nil {
                 crawler.Output.WriteToFile(outputFormat)
             }
@@ -448,26 +444,25 @@ func (crawler *Crawler) setupLinkFinder() {
         for _, relPath := range paths {
             // JS Regex Result
             outputFormat := fmt.Sprintf("[linkfinder] - [from: %s] - %s", response.Request.URL.String(), relPath)
-            if crawler.quite {
+            if !crawler.quiet {
                 outputFormat = fmt.Sprintf("%s%s", response.Request.URL.String(), relPath)
+                fmt.Println(outputFormat)
             }
             urlWithMainSite := FixUrl(crawler.site, relPath)
             if urlWithMainSite != "" {
                 outputFormat = fmt.Sprintf("[linkfinder] - %s", urlWithMainSite)
-                if crawler.quite {
-                    outputFormat = urlWithMainSite
+                if !crawler.quiet {
+                    fmt.Println(outputFormat)
                 }
             }
-            fmt.Println(outputFormat)
+
             if crawler.Output != nil {
                 crawler.Output.WriteToFile(outputFormat)
             }
 
             // Try to request JS path
             // Try to generate URLs with main site
-            if crawler.quite {
-                outputFormat = urlWithMainSite
-            }
+
             if urlWithMainSite != "" {
                 _ = crawler.C.Visit(urlWithMainSite)
             }

@@ -126,7 +126,7 @@ func run(cmd *cobra.Command, _ []string) {
     threads, _ := cmd.Flags().GetInt("threads")
     sitemap, _ := cmd.Flags().GetBool("sitemap")
     linkfinder, _ := cmd.Flags().GetBool("js")
-    quite, _ := cmd.Flags().GetBool("quite")
+    quiet, _ := cmd.Flags().GetBool("quiet")
     robots, _ := cmd.Flags().GetBool("robots")
     otherSource, _ := cmd.Flags().GetBool("other-source")
     includeSubs, _ := cmd.Flags().GetBool("include-subs")
@@ -162,16 +162,17 @@ func run(cmd *cobra.Command, _ []string) {
                     defer siteWg.Done()
                     crawler.Start(linkfinder)
                 }()
+
                 // Brute force Sitemap path
                 if sitemap {
                     siteWg.Add(1)
-                    go core.ParseSiteMap(site, crawler.Output, crawler.C, &siteWg)
+                    go core.ParseSiteMap(site, quiet, crawler.Output, crawler.C, &siteWg)
                 }
 
                 // Find Robots.txt
                 if robots {
                     siteWg.Add(1)
-                    go core.ParseRobots(site, crawler.Output, crawler.C, &siteWg)
+                    go core.ParseRobots(site, quiet, crawler.Output, crawler.C, &siteWg)
                 }
 
                 if otherSource {
@@ -186,10 +187,9 @@ func run(cmd *cobra.Command, _ []string) {
                             }
                             outputFormat := fmt.Sprintf("[other-sources] - %s", url)
                             if includeOtherSourceResult {
-                                if quite {
-                                    outputFormat = url
+                                if !quiet {
+                                    fmt.Println(outputFormat)
                                 }
-                                fmt.Println(outputFormat)
                                 if crawler.Output != nil {
                                     crawler.Output.WriteToFile(outputFormat)
                                 }

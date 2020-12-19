@@ -12,7 +12,7 @@ import (
     "github.com/gocolly/colly/v2"
 )
 
-func ParseRobots(site *url.URL, output *Output, c *colly.Collector, wg *sync.WaitGroup) {
+func ParseRobots(site *url.URL, quiet bool, output *Output, c *colly.Collector, wg *sync.WaitGroup) {
     defer wg.Done()
     robotsURL := site.String() + "/robots.txt"
 
@@ -37,7 +37,10 @@ func ParseRobots(site *url.URL, output *Output, c *colly.Collector, wg *sync.Wai
                     continue
                 }
                 outputFormat := fmt.Sprintf("[robots] - %s", url)
-                fmt.Println(outputFormat)
+                if !quiet {
+                    fmt.Println(outputFormat)
+                }
+
                 if output != nil {
                     output.WriteToFile(outputFormat)
                 }
