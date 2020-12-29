@@ -443,17 +443,19 @@ func (crawler *Crawler) setupLinkFinder() {
         }
         for _, relPath := range paths {
             // JS Regex Result
-            outputFormat := fmt.Sprintf("[linkfinder] - [from: %s] - %s", response.Request.URL.String(), relPath)
             if !crawler.quiet {
-                outputFormat = fmt.Sprintf("%s%s", response.Request.URL.String(), relPath)
+                outputFormat := fmt.Sprintf("[linkfinder] - [from: %s] - %s", response.Request.URL.String(), relPath)
                 fmt.Println(outputFormat)
             }
-            urlWithMainSite := FixUrl(crawler.site, relPath)
-            if urlWithMainSite != "" {
-                outputFormat = fmt.Sprintf("[linkfinder] - %s", urlWithMainSite)
-                if !crawler.quiet {
-                    fmt.Println(outputFormat)
-                }
+
+            rebuildURL := FixUrl(crawler.site, relPath)
+            if rebuildURL == "" {
+                continue
+            }
+
+            outputFormat := fmt.Sprintf("[linkfinder] - %s", rebuildURL)
+            if !crawler.quiet {
+                fmt.Println(outputFormat)
             }
 
             if crawler.Output != nil {
@@ -463,8 +465,8 @@ func (crawler *Crawler) setupLinkFinder() {
             // Try to request JS path
             // Try to generate URLs with main site
 
-            if urlWithMainSite != "" {
-                _ = crawler.C.Visit(urlWithMainSite)
+            if rebuildURL != "" {
+                _ = crawler.C.Visit(rebuildURL)
             }
 
             // Try to generate URLs with the site where Javascript file host in (must be in main or sub domain)

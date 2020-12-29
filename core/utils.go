@@ -33,35 +33,40 @@ func GetDomain(site *url.URL) string {
     return domain
 }
 
-// func FixUrl(url string, site *url.URL) string {
-// 	var newUrl string
-// 	if strings.HasPrefix(url, "//") {
-// 		// //google.com/example.php
-// 		newUrl = site.Scheme + ":" + url
+// func FixUrl(site *url.URL, nextLoc string) string {
+//     var newUrl string
+//     if strings.HasPrefix(nextLoc, "//") {
+//         // //google.com/example.php
+//         newUrl = site.Scheme + ":" + nextLoc
 //
-// 	} else if strings.HasPrefix(url, "http") {
-// 		// http://google.com || https://google.com
-// 		newUrl = url
+//     } else if strings.HasPrefix(nextLoc, "http") {
+//         // http://google.com || https://google.com
+//         newUrl = nextLoc
 //
-// 	} else if !strings.HasPrefix(url, "//") {
-// 		if strings.HasPrefix(url, "/") {
-// 			// Ex: /?thread=10
-// 			newUrl = site.Scheme + "://" + site.Host + url
-//
-// 		} else {
-// 			if strings.HasPrefix(url, ".") {
-// 				if strings.HasPrefix(url, "..") {
-// 					newUrl = site.Scheme + "://" + site.Host + url[2:]
-// 				} else {
-// 					newUrl = site.Scheme + "://" + site.Host + url[1:]
-// 				}
-// 			} else {
-// 				// "console/test.php"
-// 				newUrl = site.Scheme + "://" + site.Host + "/" + url
-// 			}
-// 		}
-// 	}
-// 	return newUrl
+//     } else if !strings.HasPrefix(nextLoc, "//") {
+//         // if strings.HasPrefix(nextLoc, "/") {
+//         //     // Ex: /?thread=10
+//         //     newUrl = site.Scheme + "://" + site.Host + nextLoc
+//         //
+//         // } else {
+//         //     if strings.HasPrefix(nextLoc, ".") {
+//         //         if strings.HasPrefix(nextLoc, "..") {
+//         //             newUrl = site.Scheme + "://" + site.Host + nextLoc[2:]
+//         //         } else {
+//         //             newUrl = site.Scheme + "://" + site.Host + nextLoc[1:]
+//         //         }
+//         //     } else {
+//         //         // "console/test.php"
+//         //         newUrl = site.Scheme + "://" + site.Host + "/" + nextLoc
+//         //     }
+//         // }
+//         nextLocUrl, err := url.Parse(nextLoc)
+//         if err != nil {
+//             return ""
+//         }
+//         newUrl = site.ResolveReference(nextLocUrl).String()
+//     }
+//     return newUrl
 // }
 
 func FixUrl(mainSite *url.URL, nextLoc string) string {
