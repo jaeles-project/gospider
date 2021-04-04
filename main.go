@@ -50,6 +50,7 @@ func main() {
     commands.Flags().BoolP("include-other-source", "r", false, "Also include other-source's urls (still crawl and request)")
 
     commands.Flags().BoolP("debug", "", false, "Turn on debug mode")
+    commands.Flags().BoolP("json", "", false, "Enable JSON output")
     commands.Flags().BoolP("verbose", "v", false, "Turn on verbose")
     commands.Flags().BoolP("quiet", "q", false, "Suppress all the output and only show URL")
     commands.Flags().BoolP("no-redirect", "", false, "Disable redirect")
@@ -131,6 +132,7 @@ func run(cmd *cobra.Command, _ []string) {
     otherSource, _ := cmd.Flags().GetBool("other-source")
     includeSubs, _ := cmd.Flags().GetBool("include-subs")
     includeOtherSourceResult, _ := cmd.Flags().GetBool("include-other-source")
+
     // disable all options above
     base, _ := cmd.Flags().GetBool("base")
     if base {
