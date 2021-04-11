@@ -2,7 +2,6 @@
 
 **GoSpider** - Fast web spider written in Go
 
-
 ## Painless integrate Gospider into your recon workflow?
 
 <p align="center">
@@ -34,6 +33,7 @@ go get -u github.com/jaeles-project/gospider
 * Random mobile/web User-Agent
 
 ## Showcases
+
 [![asciicast](https://asciinema.org/a/301827.svg)](https://asciinema.org/a/301827)
 
 ## Usage
@@ -90,7 +90,6 @@ Flags:
 gospider -q -s "https://google.com/"
 ```
 
-
 #### Run with single site
 
 ```
@@ -98,26 +97,31 @@ gospider -s "https://google.com/" -o output -c 10 -d 1
 ```
 
 #### Run with site list
+
 ```
 gospider -S sites.txt -o output -c 10 -d 1
 ```
 
 #### Run with 20 sites at the same time with 10 bot each site
+
 ```
 gospider -S sites.txt -o output -c 10 -d 1 -t 20
 ```
 
 #### Also get URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com, AlienVault.com)
+
 ```
 gospider -s "https://google.com/" -o output -c 10 -d 1 --other-source
 ```
 
 #### Also get URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com, AlienVault.com) and include subdomains
+
 ```
 gospider -s "https://google.com/" -o output -c 10 -d 1 --other-source --include-subs
 ```
 
 #### Use custom header/cookies
+
 ```
 gospider -s "https://google.com/" -o output -c 10 -d 1 --other-source -H "Accept: */*" -H "Test: test" --cookie "testA=a; testB=b"
 
@@ -125,14 +129,17 @@ gospider -s "https://google.com/" -o output -c 10 -d 1 --other-source --burp bur
 ```
 
 #### Blacklist url/file extension.
+
 **P/s**: gospider blacklisted `.(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico)` as default
+
 ```
 gospider -s "https://google.com/" -o output -c 10 -d 1 --blacklist ".(woff|pdf)"
 ```
 
 ## License
 
-`Gospider` is made with ♥  by [@j3ssiejjj](https://twitter.com/j3ssiejjj) & [@thebl4ckturtle](https://twitter.com/thebl4ckturtle) and it is released under the MIT license.
+`Gospider` is made with ♥ by [@j3ssiejjj](https://twitter.com/j3ssiejjj)
+& [@thebl4ckturtle](https://twitter.com/thebl4ckturtle) and it is released under the MIT license.
 
 ## Donation
 

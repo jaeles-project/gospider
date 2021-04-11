@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
 	"net"
 	"net/http"
 	"net/url"
@@ -12,6 +11,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/colly/v2/extensions"
@@ -49,18 +50,18 @@ type Crawler struct {
 
 	site       *url.URL
 	domain     string
-	input     string
-	quiet      bool
+	Input      string
+	Quiet      bool
 	JsonOutput bool
 }
 
 type SpiderOutput struct {
 	Input      string `json:"input"`
-	Source      string `json:"source"`
-	OutputType  string `json:"type"`
-	Output      string `json:"output"`
-	StatusCode  int    `json:"status"`
-	Length      int    `json:"length"`
+	Source     string `json:"source"`
+	OutputType string `json:"type"`
+	Output     string `json:"output"`
+	StatusCode int    `json:"status"`
+	Length     int    `json:"length"`
 }
 
 func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
@@ -254,8 +255,8 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 		C:                   c,
 		LinkFinderCollector: linkFinderCollector,
 		site:                site,
-		quiet:               quiet,
-		input:               site.String(),
+		Quiet:               quiet,
+		Input:               site.String(),
 		JsonOutput:          jsonOutput,
 		domain:              domain,
 		Output:              output,
@@ -292,7 +293,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 			outputFormat := fmt.Sprintf("[form] - %s", formUrl)
 			if crawler.JsonOutput {
 				sout := SpiderOutput{
-					Input:     crawler.input,
+					Input:      crawler.Input,
 					Source:     "body",
 					OutputType: "form",
 					Output:     formUrl,
@@ -301,7 +302,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 					outputFormat = data
 					fmt.Println(outputFormat)
 				}
-			} else if !crawler.quiet {
+			} else if !crawler.Quiet {
 				fmt.Println(outputFormat)
 			}
 			if crawler.Output != nil {
@@ -319,7 +320,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 			outputFormat := fmt.Sprintf("[upload-form] - %s", uploadUrl)
 			if crawler.JsonOutput {
 				sout := SpiderOutput{
-					Input:     crawler.input,
+					Input:      crawler.Input,
 					Source:     "body",
 					OutputType: "upload-form",
 					Output:     uploadUrl,
@@ -328,7 +329,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 					outputFormat = data
 					fmt.Println(outputFormat)
 				}
-			} else if !crawler.quiet {
+			} else if !crawler.Quiet {
 				fmt.Println(outputFormat)
 			}
 			if crawler.Output != nil {
@@ -353,7 +354,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 
 				if crawler.JsonOutput {
 					sout := SpiderOutput{
-						Input:     crawler.input,
+						Input:      crawler.Input,
 						Source:     "body",
 						OutputType: "javascript",
 						Output:     jsFileUrl,
@@ -362,7 +363,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 						outputFormat = data
 						fmt.Println(outputFormat)
 					}
-				} else if !crawler.quiet {
+				} else if !crawler.Quiet {
 					fmt.Println(outputFormat)
 				}
 
@@ -394,7 +395,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 
 		if crawler.JsonOutput {
 			sout := SpiderOutput{
-				Input:     crawler.input,
+				Input:      crawler.Input,
 				Source:     "body",
 				OutputType: "url",
 				StatusCode: response.StatusCode,
@@ -404,7 +405,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 			if data, err := jsoniter.MarshalToString(sout); err == nil {
 				outputFormat = data
 			}
-		} else if crawler.quiet {
+		} else if crawler.Quiet {
 			outputFormat = u
 		}
 		fmt.Println(outputFormat)
@@ -431,7 +432,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 
 		if crawler.JsonOutput {
 			sout := SpiderOutput{
-				Input:     crawler.input,
+				Input:      crawler.Input,
 				Source:     "body",
 				OutputType: "url",
 				StatusCode: response.StatusCode,
@@ -442,7 +443,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 				outputFormat = data
 				fmt.Println(outputFormat)
 			}
-		} else if crawler.quiet {
+		} else if crawler.Quiet {
 			fmt.Println(u)
 		} else {
 			fmt.Println(outputFormat)
@@ -461,14 +462,14 @@ func (crawler *Crawler) Start(linkfinder bool) {
 
 // Find subdomains from response
 func (crawler *Crawler) findSubdomains(resp string) {
-	subs := GetSubdomains(resp, crawler.input)
+	subs := GetSubdomains(resp, crawler.Input)
 	for _, sub := range subs {
 		if !crawler.subSet.Duplicate(sub) {
 			outputFormat := fmt.Sprintf("[subdomains] - %s", sub)
 
 			if crawler.JsonOutput {
 				sout := SpiderOutput{
-					Input:     crawler.input,
+					Input:      crawler.Input,
 					Source:     "body",
 					OutputType: "subdomain",
 					Output:     sub,
@@ -477,7 +478,7 @@ func (crawler *Crawler) findSubdomains(resp string) {
 					outputFormat = data
 				}
 				fmt.Println(outputFormat)
-			} else if !crawler.quiet {
+			} else if !crawler.Quiet {
 				outputFormat = fmt.Sprintf("http://%s", sub)
 				fmt.Println(outputFormat)
 				outputFormat = fmt.Sprintf("https://%s", sub)
@@ -498,7 +499,7 @@ func (crawler *Crawler) findAWSS3(resp string) {
 			outputFormat := fmt.Sprintf("[aws-s3] - %s", e)
 			if crawler.JsonOutput {
 				sout := SpiderOutput{
-					Input:     crawler.input,
+					Input:      crawler.Input,
 					Source:     "body",
 					OutputType: "aws",
 					Output:     e,
@@ -543,7 +544,7 @@ func (crawler *Crawler) setupLinkFinder() {
 			// JS Regex Result
 			if crawler.JsonOutput {
 				sout := SpiderOutput{
-					Input:     crawler.input,
+					Input:      crawler.Input,
 					Source:     response.Request.URL.String(),
 					OutputType: "linkfinder",
 					Output:     relPath,
@@ -551,7 +552,7 @@ func (crawler *Crawler) setupLinkFinder() {
 				if data, err := jsoniter.MarshalToString(sout); err == nil {
 					outputFormat = data
 				}
-			} else if !crawler.quiet {
+			} else if !crawler.Quiet {
 				outputFormat = fmt.Sprintf("[linkfinder] - [from: %s] - %s", response.Request.URL.String(), relPath)
 			}
 			fmt.Println(outputFormat)
@@ -563,7 +564,7 @@ func (crawler *Crawler) setupLinkFinder() {
 
 			if crawler.JsonOutput {
 				sout := SpiderOutput{
-					Input:     crawler.input,
+					Input:      crawler.Input,
 					Source:     response.Request.URL.String(),
 					OutputType: "linkfinder",
 					Output:     rebuildURL,
@@ -571,7 +572,7 @@ func (crawler *Crawler) setupLinkFinder() {
 				if data, err := jsoniter.MarshalToString(sout); err == nil {
 					outputFormat = data
 				}
-			} else if !crawler.quiet {
+			} else if !crawler.Quiet {
 				outputFormat = fmt.Sprintf("[linkfinder] - %s", rebuildURL)
 			}
 
