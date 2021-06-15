@@ -201,3 +201,12 @@ func ReadingLines(filename string) []string {
 	}
 	return result
 }
+
+func contains(i []int,j int) bool {
+    for _, value := range i {
+        if value == j {
+            return true
+        }
+    }
+    return false
+}

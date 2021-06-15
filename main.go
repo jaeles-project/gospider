@@ -34,6 +34,7 @@ func main() {
 	commands.Flags().StringP("blacklist", "", "", "Blacklist URL Regex")
 	commands.Flags().StringP("whitelist", "", "", "Whitelist URL Regex")
 	commands.Flags().StringP("whitelist-domain", "", "", "Whitelist Domain")
+    commands.Flags().StringP("filter-length", "L", "", "Turn on length filter")
 
 	commands.Flags().IntP("threads", "t", 1, "Number of threads (Run sites in parallel)")
 	commands.Flags().IntP("concurrent", "c", 5, "The number of the maximum allowed concurrent requests of the matching domains")
@@ -56,6 +57,8 @@ func main() {
 	commands.Flags().BoolP("quiet", "q", false, "Suppress all the output and only show URL")
 	commands.Flags().BoolP("no-redirect", "", false, "Disable redirect")
 	commands.Flags().BoolP("version", "", false, "Check version")
+    commands.Flags().BoolP("length", "l", false, "Turn on length")
+
 
 	commands.Flags().SortFlags = false
 	if err := commands.Execute(); err != nil {
