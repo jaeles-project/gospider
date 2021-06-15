@@ -523,6 +523,8 @@ func (crawler *Crawler) setupLinkFinder() {
 			return
 		}
 
+		u := response.Request.URL.String()
+
 		respStr := string(response.Body)
 
 		crawler.findAWSS3(respStr)
@@ -532,6 +534,11 @@ func (crawler *Crawler) setupLinkFinder() {
 		if err != nil {
 			Logger.Error(err)
 			return
+		}
+		currentPathURL, err := url.Parse(u)
+		currentPathURLerr := false
+		if err != nil {
+			currentPathURLerr = true
 		}
 
 		var inScope bool
@@ -557,10 +564,17 @@ func (crawler *Crawler) setupLinkFinder() {
 			}
 			fmt.Println(outputFormat)
 
-			rebuildURL := FixUrl(crawler.site, relPath)
+			rebuildURL := ""
+			if !currentPathURLerr { 
+				rebuildURL = FixUrl(currentPathURL, relPath)
+			} else { 
+				rebuildURL = FixUrl(crawler.site, relPath) 
+			}
 			if rebuildURL == "" {
 				continue
 			}
+
+
 
 			if crawler.JsonOutput {
 				sout := SpiderOutput{
