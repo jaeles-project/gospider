@@ -55,6 +55,7 @@ type Crawler struct {
 	Quiet      bool
 	JsonOutput bool
 	length     bool
+	raw        bool
 
 	filterLength_slice		[]int
 
@@ -85,6 +86,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	delay, _ := cmd.Flags().GetInt("delay")
 	randomDelay, _ := cmd.Flags().GetInt("random-delay")
 	length, _ := cmd.Flags().GetBool("length")
+	raw, _ := cmd.Flags().GetBool("raw")
 
 	c := colly.NewCollector(
 		colly.Async(true),
@@ -281,6 +283,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 		Input:               site.String(),
 		JsonOutput:          jsonOutput,
 		length:              length,
+		raw:                 raw,
 		domain:              domain,
 		Output:              output,
 		urlSet:              stringset.NewStringFilter(),
@@ -443,6 +446,16 @@ func (crawler *Crawler) Start(linkfinder bool) {
 			if crawler.Output != nil {
 				crawler.Output.WriteToFile(outputFormat)
 			}
+
+			if crawler.raw { 
+				outputFormat := fmt.Sprintf("[Raw] - \n%s\n", respStr)  //PRINTCLEAN RAW for link visited only
+				if !crawler.Quiet { 
+					fmt.Println(outputFormat)
+				}
+				if crawler.Output != nil {
+					crawler.Output.WriteToFile(outputFormat)
+				}
+			}			
 		}
 	})
 
@@ -642,6 +655,16 @@ func (crawler *Crawler) setupLinkFinder() {
 					if urlWithJSHostIn != "" {
 						_ = crawler.C.Visit(urlWithJSHostIn)
 					}
+				}
+			}
+
+			if crawler.raw { 
+				outputFormat := fmt.Sprintf("[Raw] - \n%s\n", respStr)  //PRINTCLEAN RAW for link visited only
+				if !crawler.Quiet { 
+					fmt.Println(outputFormat)
+				}
+				if crawler.Output != nil {
+					crawler.Output.WriteToFile(outputFormat)
 				}
 			}
 		}

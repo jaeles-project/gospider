@@ -77,6 +77,7 @@ Flags:
   -v, --verbose                   Turn on verbose
   -l, --length                    Turn on length
   -L, --filter-length             Turn on length filter
+  -R, --raw                       Turn on raw
   -q, --quiet                     Suppress all the output and only show URL
       --no-redirect               Disable redirect
       --version                   Check version

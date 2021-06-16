@@ -58,6 +58,7 @@ func main() {
 	commands.Flags().BoolP("no-redirect", "", false, "Disable redirect")
 	commands.Flags().BoolP("version", "", false, "Check version")
     commands.Flags().BoolP("length", "l", false, "Turn on length")
+    commands.Flags().BoolP("raw", "R", false, "Enable raw output")
 
 
 	commands.Flags().SortFlags = false
