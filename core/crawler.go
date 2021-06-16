@@ -568,10 +568,21 @@ func (crawler *Crawler) setupLinkFinder() {
 			return
 		}
 
-		u := response.Request.URL.String()
-
 		respStr := string(response.Body)
 		if len(crawler.filterLength_slice) == 0 || !contains(crawler.filterLength_slice,len(respStr)) {
+			
+			// Verify which link is working
+			u := response.Request.URL.String()
+			outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
+
+			if crawler.length {
+				outputFormat = fmt.Sprintf("[url] - [code-%d] - [len_%d] - %s", response.StatusCode, len(respStr), u)
+			}
+			fmt.Println(outputFormat)
+
+			if crawler.Output != nil {
+				crawler.Output.WriteToFile(outputFormat)
+			}
 
 			crawler.findAWSS3(respStr)
 			crawler.findSubdomains(respStr)
@@ -620,40 +631,44 @@ func (crawler *Crawler) setupLinkFinder() {
 					continue
 				}
 
+				fileExt := GetExtType(rebuildURL)
+				if fileExt == ".js" || fileExt == ".xml" || fileExt == ".json" {
+					_ = crawler.LinkFinderCollector.Visit(rebuildURL)
+				}else if !crawler.urlSet.Duplicate(rebuildURL){
 
-
-				if crawler.JsonOutput {
-					sout := SpiderOutput{
-						Input:      crawler.Input,
-						Source:     response.Request.URL.String(),
-						OutputType: "linkfinder",
-						Output:     rebuildURL,
+					if crawler.JsonOutput {
+						sout := SpiderOutput{
+							Input:      crawler.Input,
+							Source:     response.Request.URL.String(),
+							OutputType: "linkfinder",
+							Output:     rebuildURL,
+						}
+						if data, err := jsoniter.MarshalToString(sout); err == nil {
+							outputFormat = data
+						}
+					} else if !crawler.Quiet {
+						outputFormat = fmt.Sprintf("[linkfinder] - %s", rebuildURL)
 					}
-					if data, err := jsoniter.MarshalToString(sout); err == nil {
-						outputFormat = data
+
+					fmt.Println(outputFormat)
+
+					if crawler.Output != nil {
+						crawler.Output.WriteToFile(outputFormat)
 					}
-				} else if !crawler.Quiet {
-					outputFormat = fmt.Sprintf("[linkfinder] - %s", rebuildURL)
-				}
 
-				fmt.Println(outputFormat)
+					// Try to request JS path
+					// Try to generate URLs with main site
 
-				if crawler.Output != nil {
-					crawler.Output.WriteToFile(outputFormat)
-				}
+					if rebuildURL != "" {
+						_ = crawler.C.Visit(rebuildURL)
+					}
 
-				// Try to request JS path
-				// Try to generate URLs with main site
-
-				if rebuildURL != "" {
-					_ = crawler.C.Visit(rebuildURL)
-				}
-
-				// Try to generate URLs with the site where Javascript file host in (must be in main or sub domain)
-				if inScope {
-					urlWithJSHostIn := FixUrl(crawler.site, relPath)
-					if urlWithJSHostIn != "" {
-						_ = crawler.C.Visit(urlWithJSHostIn)
+					// Try to generate URLs with the site where Javascript file host in (must be in main or sub domain)
+					if inScope {
+						urlWithJSHostIn := FixUrl(crawler.site, relPath)
+						if urlWithJSHostIn != "" {
+							_ = crawler.C.Visit(urlWithJSHostIn)
+						}
 					}
 				}
 			}
