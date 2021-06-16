@@ -357,6 +357,24 @@ func (crawler *Crawler) Start(linkfinder bool) {
 			return
 		}
 		if !crawler.urlSet.Duplicate(urlString) {
+			outputFormat := fmt.Sprintf("[href] - %s", urlString)
+			if crawler.JsonOutput {
+			sout := SpiderOutput{
+				Input:      crawler.Input,
+				Source:     "body",
+				OutputType: "form",
+				Output:     urlString,
+			}
+			if data, err := jsoniter.MarshalToString(sout); err == nil {
+				outputFormat = data
+				fmt.Println(outputFormat)
+			}
+			} else if !crawler.Quiet {
+				fmt.Println(outputFormat)
+			}
+			if crawler.Output != nil {
+					crawler.Output.WriteToFile(outputFormat)
+			}
 			_ = e.Request.Visit(urlString)
 		}
 	})
