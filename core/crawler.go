@@ -306,6 +306,7 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	}
 }
 
+
 func (crawler *Crawler) feedLinkfinder(jsFileUrl string, OutputType string, source string, ) {
 
 	if !crawler.jsSet.Duplicate(jsFileUrl) {
@@ -543,7 +544,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 
 // Find subdomains from response
 func (crawler *Crawler) findSubdomains(resp string) {
-	subs := GetSubdomains(resp, crawler.Input)
+	subs := GetSubdomains(resp, crawler.domain)
 	for _, sub := range subs {
 		if !crawler.subSet.Duplicate(sub) {
 			outputFormat := fmt.Sprintf("[subdomains] - %s", sub)
@@ -560,9 +561,9 @@ func (crawler *Crawler) findSubdomains(resp string) {
 				}
 				fmt.Println(outputFormat)
 			} else if !crawler.Quiet {
-				outputFormat = fmt.Sprintf("http://%s", sub)
+				outputFormat = fmt.Sprintf("[subdomains] - http://%s", sub)
 				fmt.Println(outputFormat)
-				outputFormat = fmt.Sprintf("https://%s", sub)
+				outputFormat = fmt.Sprintf("[subdomains] - https://%s", sub)
 				fmt.Println(outputFormat)
 			}
 			if crawler.Output != nil {
