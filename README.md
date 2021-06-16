@@ -140,6 +140,12 @@ gospider -s "https://google.com/" -o output -c 10 -d 1 --other-source --burp bur
 gospider -s "https://google.com/" -o output -c 10 -d 1 --blacklist ".(woff|pdf)"
 ```
 
+#### Show and Blacklist file length.
+
+```
+gospider -s "https://google.com/" -o output -c 10 -d 1 --length --filter-length "6871,24432"   
+```
+
 ## License
 
 `Gospider` is made with ♥ by [@j3ssiejjj](https://twitter.com/j3ssiejjj)
