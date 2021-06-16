@@ -159,12 +159,12 @@ func DecodeChars(s string) string {
 }
 
 func InScope(u *url.URL, regexps []*regexp.Regexp) bool {
-	for _, r := range regexps {
-		if r.MatchString(u.Hostname()) {
-			return true
-		}
-	}
-	return false
+    for _, r := range regexps {
+        if r.MatchString(u.String()) {
+            return true
+        }
+    }
+    return false
 }
 
 // NormalizePath the path

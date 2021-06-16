@@ -67,6 +67,7 @@ Flags:
   -m, --timeout int               Request timeout (second) (default 10)
   -B, --base                      Disable all and only use HTML content
       --js                        Enable linkfinder in javascript file (default true)
+      --subs                      Include subdomains
       --sitemap                   Try to crawl sitemap.xml
       --robots                    Try to crawl robots.txt (default true)
   -a, --other-source              Find URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com, AlienVault.com)
