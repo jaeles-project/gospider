@@ -67,6 +67,7 @@ Flags:
   -m, --timeout int               Request timeout (second) (default 10)
   -B, --base                      Disable all and only use HTML content
       --js                        Enable linkfinder in javascript file (default true)
+      --subs                      Include subdomains
       --sitemap                   Try to crawl sitemap.xml
       --robots                    Try to crawl robots.txt (default true)
   -a, --other-source              Find URLs from 3rd party (Archive.org, CommonCrawl.org, VirusTotal.com, AlienVault.com)
@@ -75,6 +76,9 @@ Flags:
       --debug                     Turn on debug mode
       --json                      Enable JSON output
   -v, --verbose                   Turn on verbose
+  -l, --length                    Turn on length
+  -L, --filter-length             Turn on length filter
+  -R, --raw                       Turn on raw
   -q, --quiet                     Suppress all the output and only show URL
       --no-redirect               Disable redirect
       --version                   Check version
@@ -134,6 +138,12 @@ gospider -s "https://google.com/" -o output -c 10 -d 1 --other-source --burp bur
 
 ```
 gospider -s "https://google.com/" -o output -c 10 -d 1 --blacklist ".(woff|pdf)"
+```
+
+#### Show and Blacklist file length.
+
+```
+gospider -s "https://google.com/" -o output -c 10 -d 1 --length --filter-length "6871,24432"   
 ```
 
 ## License

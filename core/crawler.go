@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"strconv"
 
 	jsoniter "github.com/json-iterator/go"
 
@@ -53,6 +54,14 @@ type Crawler struct {
 	Input      string
 	Quiet      bool
 	JsonOutput bool
+	length     bool
+	raw        bool
+	subs       bool
+
+
+	filterLength_slice		[]int
+
+
 }
 
 type SpiderOutput struct {
@@ -78,6 +87,9 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 	concurrent, _ := cmd.Flags().GetInt("concurrent")
 	delay, _ := cmd.Flags().GetInt("delay")
 	randomDelay, _ := cmd.Flags().GetInt("random-delay")
+	length, _ := cmd.Flags().GetBool("length")
+	raw, _ := cmd.Flags().GetBool("raw")
+	subs, _ := cmd.Flags().GetBool("subs")
 
 	c := colly.NewCollector(
 		colly.Async(true),
@@ -200,13 +212,35 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 		filename := strings.ReplaceAll(site.Hostname(), ".", "_")
 		output = NewOutput(outputFolder, filename)
 	}
+
+	// Init Length Filter
+    filterLength_slice := []int{}
+	filterLength, _ := cmd.Flags().GetString("filter-length")
+
+	if filterLength != "" {
+
+		lengthArgs := strings.Split(filterLength, ",")
+		for i:=0; i < len(lengthArgs);i++ {
+			if i, err := strconv.Atoi(lengthArgs[i]); err == nil {
+				filterLength_slice = append(filterLength_slice,i)
+			}
+		}
+	}
+
 	// Set url whitelist regex
-	sRegex := regexp.MustCompile(domain)
+	reg :=""
+	if subs {
+		reg = site.Hostname()
+	}else {
+		reg ="(?:https|http)://"+site.Hostname()
+	}
+
+	sRegex := regexp.MustCompile(reg) 
 	c.URLFilters = append(c.URLFilters, sRegex)
 
 	// Set Limit Rule
 	err := c.Limit(&colly.LimitRule{
-		DomainGlob:  domain,
+		DomainGlob:  "*",
 		Parallelism: concurrent,
 		Delay:       time.Duration(delay) * time.Second,
 		RandomDelay: time.Duration(randomDelay) * time.Second,
@@ -258,6 +292,8 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 		Quiet:               quiet,
 		Input:               site.String(),
 		JsonOutput:          jsonOutput,
+		length:              length,
+		raw:                 raw,
 		domain:              domain,
 		Output:              output,
 		urlSet:              stringset.NewStringFilter(),
@@ -265,7 +301,47 @@ func NewCrawler(site *url.URL, cmd *cobra.Command) *Crawler {
 		jsSet:               stringset.NewStringFilter(),
 		formSet:             stringset.NewStringFilter(),
 		awsSet:              stringset.NewStringFilter(),
+		filterLength_slice:  filterLength_slice,
+
 	}
+}
+
+
+func (crawler *Crawler) feedLinkfinder(jsFileUrl string, OutputType string, source string, ) {
+
+	if !crawler.jsSet.Duplicate(jsFileUrl) {
+		outputFormat := fmt.Sprintf("[%s] - %s", OutputType, jsFileUrl)
+
+		if crawler.JsonOutput {
+			sout := SpiderOutput{
+				Input:     crawler.Input,
+				Source:     source,
+				OutputType: OutputType,
+				Output:     jsFileUrl,
+			}
+			if data, err := jsoniter.MarshalToString(sout); err == nil {
+				outputFormat = data
+				fmt.Println(outputFormat)
+			}
+
+		} else if !crawler.Quiet {
+			fmt.Println(outputFormat)
+		}
+
+		if crawler.Output != nil {
+			crawler.Output.WriteToFile(outputFormat)
+		}
+
+		// If JS file is minimal format. Try to find original format
+		if strings.Contains(jsFileUrl, ".min.js") {
+			originalJS := strings.ReplaceAll(jsFileUrl, ".min.js", ".js")
+			_ = crawler.LinkFinderCollector.Visit(originalJS)
+		}
+
+		// Send Javascript to Link Finder Collector
+		_ = crawler.LinkFinderCollector.Visit(jsFileUrl)
+
+	} 
 }
 
 func (crawler *Crawler) Start(linkfinder bool) {
@@ -282,6 +358,24 @@ func (crawler *Crawler) Start(linkfinder bool) {
 			return
 		}
 		if !crawler.urlSet.Duplicate(urlString) {
+			outputFormat := fmt.Sprintf("[href] - %s", urlString)
+			if crawler.JsonOutput {
+			sout := SpiderOutput{
+				Input:      crawler.Input,
+				Source:     "body",
+				OutputType: "form",
+				Output:     urlString,
+			}
+			if data, err := jsoniter.MarshalToString(sout); err == nil {
+				outputFormat = data
+				fmt.Println(outputFormat)
+			}
+			} else if !crawler.Quiet {
+				fmt.Println(outputFormat)
+			}
+			if crawler.Output != nil {
+					crawler.Output.WriteToFile(outputFormat)
+			}
 			_ = e.Request.Visit(urlString)
 		}
 	})
@@ -349,68 +443,56 @@ func (crawler *Crawler) Start(linkfinder bool) {
 
 		fileExt := GetExtType(jsFileUrl)
 		if fileExt == ".js" || fileExt == ".xml" || fileExt == ".json" {
-			if !crawler.jsSet.Duplicate(jsFileUrl) {
-				outputFormat := fmt.Sprintf("[javascript] - %s", jsFileUrl)
-
-				if crawler.JsonOutput {
-					sout := SpiderOutput{
-						Input:      crawler.Input,
-						Source:     "body",
-						OutputType: "javascript",
-						Output:     jsFileUrl,
-					}
-					if data, err := jsoniter.MarshalToString(sout); err == nil {
-						outputFormat = data
-						fmt.Println(outputFormat)
-					}
-				} else if !crawler.Quiet {
-					fmt.Println(outputFormat)
-				}
-
-				if crawler.Output != nil {
-					crawler.Output.WriteToFile(outputFormat)
-				}
-
-				// If JS file is minimal format. Try to find original format
-				if strings.Contains(jsFileUrl, ".min.js") {
-					originalJS := strings.ReplaceAll(jsFileUrl, ".min.js", ".js")
-					_ = crawler.LinkFinderCollector.Visit(originalJS)
-				}
-
-				// Send Javascript to Link Finder Collector
-				_ = crawler.LinkFinderCollector.Visit(jsFileUrl)
-			}
+			crawler.feedLinkfinder(jsFileUrl,"javascript","body")
 		}
 	})
 
 	crawler.C.OnResponse(func(response *colly.Response) {
 		respStr := DecodeChars(string(response.Body))
 
-		crawler.findSubdomains(respStr)
-		crawler.findAWSS3(respStr)
+		if len(crawler.filterLength_slice) == 0 || !contains(crawler.filterLength_slice,len(respStr)) {
 
-		// Verify which link is working
-		u := response.Request.URL.String()
-		outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
+			// Verify which link is working
+			u := response.Request.URL.String()
+			outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
 
-		if crawler.JsonOutput {
-			sout := SpiderOutput{
-				Input:      crawler.Input,
-				Source:     "body",
-				OutputType: "url",
-				StatusCode: response.StatusCode,
-				Output:     u,
-				Length:     strings.Count(respStr, "\n"),
+			if crawler.length {
+				outputFormat = fmt.Sprintf("[url] - [code-%d] - [len_%d] - %s", response.StatusCode, len(respStr), u)
 			}
-			if data, err := jsoniter.MarshalToString(sout); err == nil {
-				outputFormat = data
+
+			if crawler.JsonOutput {
+				sout := SpiderOutput{
+					Input:      crawler.Input,
+					Source:     "body",
+					OutputType: "url",
+					StatusCode: response.StatusCode,
+					Output:     u,
+					Length:     strings.Count(respStr, "\n"),
+				}
+				if data, err := jsoniter.MarshalToString(sout); err == nil {
+					outputFormat = data
+				}
+			} else if crawler.Quiet {
+				outputFormat = u
 			}
-		} else if crawler.Quiet {
-			outputFormat = u
-		}
-		fmt.Println(outputFormat)
-		if crawler.Output != nil {
-			crawler.Output.WriteToFile(outputFormat)
+			fmt.Println(outputFormat)
+			if crawler.Output != nil {
+				crawler.Output.WriteToFile(outputFormat)
+			}
+			if InScope(response.Request.URL, crawler.C.URLFilters) {
+				crawler.findSubdomains(respStr)
+				crawler.findAWSS3(respStr)
+			}
+
+			if crawler.raw { 
+				outputFormat := fmt.Sprintf("[Raw] - \n%s\n", respStr)  //PRINTCLEAN RAW for link visited only
+				if !crawler.Quiet { 
+					fmt.Println(outputFormat)
+				}
+				if crawler.Output != nil {
+					crawler.Output.WriteToFile(outputFormat)
+				}
+			}			
 		}
 	})
 
@@ -462,7 +544,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 
 // Find subdomains from response
 func (crawler *Crawler) findSubdomains(resp string) {
-	subs := GetSubdomains(resp, crawler.Input)
+	subs := GetSubdomains(resp, crawler.domain)
 	for _, sub := range subs {
 		if !crawler.subSet.Duplicate(sub) {
 			outputFormat := fmt.Sprintf("[subdomains] - %s", sub)
@@ -479,9 +561,9 @@ func (crawler *Crawler) findSubdomains(resp string) {
 				}
 				fmt.Println(outputFormat)
 			} else if !crawler.Quiet {
-				outputFormat = fmt.Sprintf("http://%s", sub)
+				outputFormat = fmt.Sprintf("[subdomains] - http://%s", sub)
 				fmt.Println(outputFormat)
-				outputFormat = fmt.Sprintf("https://%s", sub)
+				outputFormat = fmt.Sprintf("[subdomains] - https://%s", sub)
 				fmt.Println(outputFormat)
 			}
 			if crawler.Output != nil {
@@ -519,81 +601,154 @@ func (crawler *Crawler) findAWSS3(resp string) {
 // Setup link finder
 func (crawler *Crawler) setupLinkFinder() {
 	crawler.LinkFinderCollector.OnResponse(func(response *colly.Response) {
-		if response.StatusCode != 200 {
+		if response.StatusCode == 404 || response.StatusCode == 429 || response.StatusCode < 100 {
 			return
 		}
 
 		respStr := string(response.Body)
 
-		crawler.findAWSS3(respStr)
-		crawler.findSubdomains(respStr)
+		if len(crawler.filterLength_slice) == 0 || !contains(crawler.filterLength_slice,len(respStr)) {
 
-		paths, err := LinkFinder(respStr)
-		if err != nil {
-			Logger.Error(err)
-			return
-		}
+			// Verify which link is working
+			u := response.Request.URL.String()
+			outputFormat := fmt.Sprintf("[url] - [code-%d] - %s", response.StatusCode, u)
 
-		var inScope bool
-		if InScope(response.Request.URL, crawler.C.URLFilters) {
-			inScope = true
-		}
-		for _, relPath := range paths {
-
-			var outputFormat string
-			// JS Regex Result
-			if crawler.JsonOutput {
-				sout := SpiderOutput{
-					Input:      crawler.Input,
-					Source:     response.Request.URL.String(),
-					OutputType: "linkfinder",
-					Output:     relPath,
-				}
-				if data, err := jsoniter.MarshalToString(sout); err == nil {
-					outputFormat = data
-				}
-			} else if !crawler.Quiet {
-				outputFormat = fmt.Sprintf("[linkfinder] - [from: %s] - %s", response.Request.URL.String(), relPath)
+			if crawler.length {
+				outputFormat = fmt.Sprintf("[url] - [code-%d] - [len_%d] - %s", response.StatusCode, len(respStr), u)
 			}
-			fmt.Println(outputFormat)
-
-			rebuildURL := FixUrl(crawler.site, relPath)
-			if rebuildURL == "" {
-				continue
-			}
-
-			if crawler.JsonOutput {
-				sout := SpiderOutput{
-					Input:      crawler.Input,
-					Source:     response.Request.URL.String(),
-					OutputType: "linkfinder",
-					Output:     rebuildURL,
-				}
-				if data, err := jsoniter.MarshalToString(sout); err == nil {
-					outputFormat = data
-				}
-			} else if !crawler.Quiet {
-				outputFormat = fmt.Sprintf("[linkfinder] - %s", rebuildURL)
-			}
-
 			fmt.Println(outputFormat)
 
 			if crawler.Output != nil {
 				crawler.Output.WriteToFile(outputFormat)
 			}
 
-			// Try to request JS path
-			// Try to generate URLs with main site
+			if InScope(response.Request.URL, crawler.C.URLFilters) {			
 
-			if rebuildURL != "" {
-				_ = crawler.C.Visit(rebuildURL)
-			}
+				crawler.findSubdomains(respStr)
+				crawler.findAWSS3(respStr)
 
-			// Try to generate URLs with the site where Javascript file host in (must be in main or sub domain)
-			if inScope {
-				urlWithJSHostIn := FixUrl(crawler.site, relPath)
-				if urlWithJSHostIn != "" {
-					_ = crawler.C.Visit(urlWithJSHostIn)
+				paths, err := LinkFinder(respStr)
+				if err != nil {
+					Logger.Error(err)
+					return
+				}
+
+			  	currentPathURL, err := url.Parse(u)
+				currentPathURLerr := false
+				if err != nil {
+					currentPathURLerr = true
+				}
+
+				for _, relPath := range paths {
+					var outputFormat string
+					// JS Regex Result
+					if crawler.JsonOutput {
+						sout := SpiderOutput{
+							Input:      crawler.Input,
+							Source:     response.Request.URL.String(),
+							OutputType: "linkfinder",
+							Output:     relPath,
+						}
+						if data, err := jsoniter.MarshalToString(sout); err == nil {
+							outputFormat = data
+						}
+					} else if !crawler.Quiet {
+						outputFormat = fmt.Sprintf("[linkfinder] - [from: %s] - %s", response.Request.URL.String(), relPath)
+					}
+					fmt.Println(outputFormat)
+
+					if crawler.Output != nil {
+						crawler.Output.WriteToFile(outputFormat)
+					}
+					rebuildURL := ""
+					if !currentPathURLerr { 
+						rebuildURL = FixUrl(currentPathURL, relPath)
+					} else { 
+						rebuildURL = FixUrl(crawler.site, relPath) 
+					}
+
+					
+					if rebuildURL == "" {
+						continue
+					}
+
+					// Try to request JS path
+					// Try to generate URLs with main site
+					fileExt := GetExtType(rebuildURL)
+					if fileExt == ".js" || fileExt == ".xml" || fileExt == ".json" || fileExt == ".map" {
+							crawler.feedLinkfinder(rebuildURL,"linkfinder","javascript")
+					}else if !crawler.urlSet.Duplicate(rebuildURL){
+
+						if crawler.JsonOutput {
+							sout := SpiderOutput{
+								Input:      crawler.Input,
+								Source:     response.Request.URL.String(),
+								OutputType: "linkfinder",
+								Output:     rebuildURL,
+							}
+							if data, err := jsoniter.MarshalToString(sout); err == nil {
+								outputFormat = data
+							}
+						} else if !crawler.Quiet{
+							outputFormat = fmt.Sprintf("[linkfinder] - %s", rebuildURL)
+						}
+
+						fmt.Println(outputFormat)
+
+						if crawler.Output != nil {
+							crawler.Output.WriteToFile(outputFormat)
+						}
+						_ = crawler.C.Visit(rebuildURL)
+					}
+
+					// Try to generate URLs with the site where Javascript file host in (must be in main or sub domain)
+
+					urlWithJSHostIn := FixUrl(crawler.site, relPath)
+					if urlWithJSHostIn != ""  {
+						fileExt := GetExtType(urlWithJSHostIn)
+						if fileExt == ".js" || fileExt == ".xml" || fileExt == ".json" || fileExt == ".map" {
+								crawler.feedLinkfinder(urlWithJSHostIn,"linkfinder","javascript")
+							}else{
+							if crawler.urlSet.Duplicate(urlWithJSHostIn){
+								continue
+							}else{
+
+								if crawler.JsonOutput {
+									sout := SpiderOutput{
+										Input:      crawler.Input,
+										Source:     response.Request.URL.String(),
+										OutputType: "linkfinder",
+										Output:     urlWithJSHostIn,
+									}
+									if data, err := jsoniter.MarshalToString(sout); err == nil {
+										outputFormat = data
+									}
+								} else if !crawler.Quiet{
+									outputFormat = fmt.Sprintf("[linkfinder] - %s", urlWithJSHostIn)
+								}
+								fmt.Println(outputFormat)
+
+								if crawler.Output != nil {
+									crawler.Output.WriteToFile(outputFormat)
+								}
+								 _ = crawler.C.Visit(urlWithJSHostIn)  //not print care for lost link
+							}
+						}
+
+					}
+					
+				}
+				
+				if crawler.raw{ 
+
+					outputFormat := fmt.Sprintf("[Raw] - \n%s\n", respStr)  //PRINTCLEAN RAW for link visited only
+					if !crawler.Quiet { 
+						fmt.Println(outputFormat)
+					}
+
+					if crawler.Output != nil {
+						crawler.Output.WriteToFile(outputFormat)
+					}
 				}
 			}
 		}
