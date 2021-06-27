@@ -14,7 +14,7 @@ Enjoying this tool? Support it's development and take your game to the next leve
 ## Installation
 
 ```
-go get -u github.com/jaeles-project/gospider
+GO111MODULE=on go get -u github.com/jaeles-project/gospider
 ```
 
 ## Features
