@@ -15,7 +15,7 @@
 ## Installation
 
 ```
-GO111MODULE=on go get -u github.com/jaeles-project/gospider
+GO111MODULE=on go install github.com/jaeles-project/gospider@latest
 ```
 
 ## Features
