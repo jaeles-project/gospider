@@ -1,4 +1,4 @@
-# GoSpider
+ # GoSpider
 
 **GoSpider** - Fast web spider written in Go
 
@@ -147,6 +147,14 @@ gospider -s "https://google.com/" -o output -c 10 -d 1 --blacklist ".(woff|pdf)"
 gospider -s "https://google.com/" -o output -c 10 -d 1 --length --filter-length "6871,24432"   
 ```
 
+### Run Docker
+
+```
+docker build -t gospider .
+docker run --rm -t gospider -q -s "https://google.com/"
+```
+
+
 ## License
 
 `Gospider` is made with ♥ by [@j3ssiejjj](https://twitter.com/j3ssiejjj)
@@ -155,3 +163,4 @@ gospider -s "https://google.com/" -o output -c 10 -d 1 --length --filter-length 
 ## Donation
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/j3ssiejjj)
+ 
