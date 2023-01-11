@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/url"
 	"os"
 	"strings"
@@ -92,7 +92,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	verbose, _ := cmd.Flags().GetBool("verbose")
 	if !verbose && !isDebug {
-		core.Logger.SetOutput(ioutil.Discard)
+		core.Logger.SetOutput(io.Discard)
 	}
 
 	// Create output folder when save file option selected
