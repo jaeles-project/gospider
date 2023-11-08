@@ -101,7 +101,7 @@ Flags:
 
 ## Example commands
 
-### Quite output
+### Quiet output
 
 ```
 gospider -q -s "https://google.com/"
