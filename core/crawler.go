@@ -616,6 +616,22 @@ func (crawler *Crawler) setupLinkFinder() {
 			if crawler.length {
 				outputFormat = fmt.Sprintf("[url] - [code-%d] - [len_%d] - %s", response.StatusCode, len(respStr), u)
 			}
+
+			if crawler.JsonOutput {
+				sout := SpiderOutput{
+					Input:      crawler.Input,
+					Source:     "body",
+					OutputType: "url",
+					StatusCode: response.StatusCode,
+					Output:     u,
+					Length:     strings.Count(respStr, "\n"),
+				}
+				if data, err := jsoniter.MarshalToString(sout); err == nil {
+					outputFormat = data
+				}
+			} else if crawler.Quiet {
+				outputFormat = u
+			}
 			fmt.Println(outputFormat)
 
 			if crawler.Output != nil {
