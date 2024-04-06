@@ -22,6 +22,7 @@ func ParseRobots(site *url.URL, crawler *Crawler, c *colly.Collector, wg *sync.W
 	if err != nil {
 		return
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
 		Logger.Infof("Found robots.txt: %s", robotsURL)
 		body, err := ioutil.ReadAll(resp.Body)
