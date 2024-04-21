@@ -92,8 +92,8 @@ Flags:
   -l, --length                    Turn on length
   -L, --filter-length             Turn on length filter
   -R, --raw                       Turn on raw
-  -q, --quiet                     Suppress all the output and only show URL
-      --no-redirect               Disable redirect
+  q,  quiet                     Suppress all the output and only show URL
+      no-redirect               Disable redirect
       --version                   Check version
   -h, --help                      help for gospider
 
@@ -104,7 +104,7 @@ Flags:
 ### Quite output
 
 ```
-gospider -q -s "https://google.com/"
+gospider q -s "https://google.com/"
 ```
 
 #### Run with single site
