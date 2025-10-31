@@ -24,7 +24,7 @@ GO111MODULE=on go install github.com/jaeles-project/gospider@latest
 ```bash
 # Clone the repo
 git clone https://github.com/jaeles-project/gospider.git
-# Build the contianer
+# Build the container
 docker build -t gospider:latest gospider
 # Run the container
 docker run -t gospider -h
