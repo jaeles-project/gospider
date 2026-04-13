@@ -1,5 +1,5 @@
-FROM golang:latest AS build-env
-RUN GO111MODULE=on go install github.com/jaeles-project/gospider@latest
+FROM golang:1.26 AS build-env
+RUN go install github.com/jaeles-project/gospider@latest
 FROM alpine:3.17.1
 RUN apk add --no-cache ca-certificates libc6-compat
 WORKDIR /app
